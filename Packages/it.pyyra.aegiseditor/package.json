@@ -1,0 +1,13 @@
+{
+  "name": "it.pyyra.aegiseditor",
+  "displayName": "AegisEditor",
+  "version": "1.0.3",
+  "unity": "2021.3",
+  "description": "SCP:SL Editor but client sided.",
+  "keywords": [
+    "scpsl",
+    "map",
+    "editor",
+    "mapeditor"
+  ]
+}
