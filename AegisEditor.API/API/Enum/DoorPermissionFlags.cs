@@ -7,7 +7,6 @@ namespace AegisEditor.API.Enum;
 public enum DoorPermissionFlags : ushort
 {
     None = 0,
-    All = ushort.MaxValue,
     Checkpoints = 1,
     ExitGates = 2,
     Intercom = 4,
