@@ -1,0 +1,12 @@
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+namespace AegisEditor.Editor.Importer.MER;
+
+public enum BlockType
+{
+    Empty = 0,
+    Primitive = 1,
+    Light = 2,
+    Pickup = 3,
+    Workstation = 4,
+    Schematic = 5,
+}

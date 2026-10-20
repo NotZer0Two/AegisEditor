@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AegisEditor.API/AegisEditor.API.csproj" />
+  <Project Path="AegisEditor.Editor/AegisEditor.Editor.csproj" />
+  <Project Path="AegisEditor/AegisEditor.csproj" />
+</Solution>
