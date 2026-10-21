@@ -1,5 +1,6 @@
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Interfaces.Network;
 using LabApi.Features.Wrappers;
 using Mirror;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace AegisEditor.API.Features.ServerObject;
 /// <summary>
 /// Server-side waypoint.
 /// </summary>
-public class ServerWaypointSpawner : NetworkedObject
+public class ServerWaypointSpawner : NetworkedObject, IServerSidedWaypoint
 {
     private readonly WaypointToy? _waypoint;
 

@@ -1,5 +1,6 @@
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Interfaces.Network;
 using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
 using LabApi.Features.Wrappers;
@@ -12,7 +13,7 @@ namespace AegisEditor.API.Features.ServerObject;
 /// <summary>
 /// Server-side pickup that nobody sees until it is spawned for them.
 /// </summary>
-public class ServerDoorSpawner : NetworkedObject
+public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
 {
     private readonly BasicDoor? door;
 

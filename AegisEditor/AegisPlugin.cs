@@ -74,6 +74,11 @@ public class AegisPlugin : Plugin<AegisConfig>
     internal static Assembly Assembly { get; } = typeof(AegisPlugin).Assembly;
     
     /// <summary>
+    /// Gets the instance of the plugin.
+    /// </summary>
+    internal static AegisPlugin? Instance { get; private set; }
+    
+    /// <summary>
     /// Gets the updater that manages the updates of all spawnables.
     /// </summary>
     internal static PlayerObjectUpdater? Updater { get; private set; }
@@ -81,6 +86,7 @@ public class AegisPlugin : Plugin<AegisConfig>
     /// <inheritdoc/>
     public override void Enable()
     {
+        Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner());
@@ -117,5 +123,6 @@ public class AegisPlugin : Plugin<AegisConfig>
         UnityEngine.Object.Destroy(_updaterObject);
         _updaterObject = null;
         Updater = null;
+        Instance = null;
     }
 }

@@ -42,4 +42,10 @@ public class AegisConfig
     /// </summary>
     [Description("Despawns every schematic when the round restarts")]
     public bool DespawnOnRoundRestart { get; set; } = false;
+    
+    /// <summary>
+    /// Fix Server Side Waypoints.
+    /// </summary>
+    [Description("Fixes Server side waypoints (ex Doors and Waypoints) by forcing them to spawn always in the client fixing some issues with desync (put true if you dont know what you are doing)")]
+    public bool FixServerSideWaypoints { get; set; } = true;
 }

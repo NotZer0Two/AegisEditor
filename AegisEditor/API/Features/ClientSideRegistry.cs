@@ -5,6 +5,7 @@ using AegisEditor.API.Features.ClientObject;
 using AegisEditor.API.Features.ServerObject;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces;
+using AegisEditor.API.Interfaces.Network;
 using LabApi.Features.Wrappers;
 
 namespace AegisEditor.API.Features;
@@ -170,6 +171,9 @@ public static class ClientSideRegistry
 
         foreach (NetworkedObject obj in list)
         {
+            if (AegisPlugin.Instance.Config.FixServerSideWaypoints && obj is IServerSidedWaypoint)
+                continue;
+            
             if (TrackedIds.Contains(obj.NetId))
                 ByNetId[obj.NetId] = entry;
         }
