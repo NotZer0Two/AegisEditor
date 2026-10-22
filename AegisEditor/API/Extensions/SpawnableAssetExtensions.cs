@@ -48,6 +48,14 @@ public static class SpawnableAssetExtensions
     public static string GetName(this SpawnableDoorType id) =>
         GetAssetName(id);
     
+    /// <summary>
+    /// Gets the string value of the enum member.
+    /// </summary>
+    /// <param name="id">The enum member.</param>
+    /// <returns>The string value.</returns>
+    public static string GetName(this SpawnableCamera id) =>
+        GetAssetName(id);
+    
     private static string GetAssetName(System.Enum id) =>
         ((AssetsName)Attribute.GetCustomAttribute(id.GetType().GetField(id.ToString()), typeof(AssetsName))).Asset;
 }
