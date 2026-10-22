@@ -39,8 +39,11 @@
         <Reference Include="Unity.TextMeshPro" Private="false" />
         <Reference Include="UnityEngine.UI" Private="false" />
     </ItemGroup>
-    
-    <ItemGroup>
-        <Reference Include="UnityEditor" HintPath="..\References\UnityEditor.dll" Private="false" />
+
+    <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)../References/UnityEditor.dll')">
+        <Reference Include="UnityEditor" HintPath="$(MSBuildThisFileDirectory)../References/UnityEditor.dll" Private="false" />
+    </ItemGroup>
+    <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)../References/UnityEditor.dll')">
+        <PackageReference Include="UnityEditor.Ref" Version="2021.3.17" />
     </ItemGroup>
 </Project>
