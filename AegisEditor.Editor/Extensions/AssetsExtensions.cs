@@ -265,4 +265,33 @@ public static class AssetsExtensions
 
         return itemspawner;
     }
+    
+    /// <summary>
+    /// Adds a camera to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="camera">camera.</param>
+    /// <returns>The newly created capybara.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddCamera(Selection.activeTransform, SpawnableCamera.Surface);</example>
+    public static AegisCamera AddCamera(this AegisPrefab bundle, Transform parent, SpawnableCamera camera = SpawnableCamera.Surface)
+    {
+        GameObject go = new GameObject($"{camera}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisCamera itemspawner = go.AddComponent<AegisCamera>();
+        itemspawner.cameraType = camera;
+
+        itemspawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(itemspawner.gameObject, $"Created Camera");
+        Selection.activeGameObject = itemspawner.gameObject;
+
+        return itemspawner;
+    }
 }
