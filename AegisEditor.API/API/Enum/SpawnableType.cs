@@ -16,5 +16,6 @@ public enum SpawnableType : byte
     Item,
     Assets,
     Door,
-    Waypoint
+    Waypoint,
+    Locker
 }
