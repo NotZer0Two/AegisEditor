@@ -1,12 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces.Network;
 using AegisEditor.API.Struct;
+using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
 using MapGeneration.Distributors;
+using MEC;
 using Mirror;
 using UnityEngine;
 using DoorPermissionFlags = Interactables.Interobjects.DoorUtils.DoorPermissionFlags;
@@ -31,6 +35,8 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
     /// <param name="source">The locker spawnable it represents.</param>
     public ServerLockerSpawner(AegisLocker source)
     {
+        // added as a safety a bit of custom format because unity drops everything except this im not asking questions.
+        int snapshot = source.RestoreFromSnapshot();
         Locker instance = UnityEngine.Object.Instantiate(PrefabCache.Get<Locker>(source.lockerType.GetName()));
 
         Transform t = instance.transform;
@@ -38,6 +44,12 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
         t.SetPositionAndRotation(source.transform.position, source.transform.rotation);
         t.localScale = source.transform.lossyScale;
 
+        if (instance.TryGetComponent(out StructurePositionSync structurePositionSync))
+        {
+            structurePositionSync.Network_position = source.transform.position;
+            structurePositionSync.Network_rotationY = (sbyte)Mathf.RoundToInt(source.transform.rotation.eulerAngles.y / 5.625f);
+        }
+        
         locker = instance;
         slots = source.Slots.ToDictionary(s => s.Name, s => s.ChamberIndices);
 
@@ -46,6 +58,15 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
 
         NetworkServer.Spawn(instance.gameObject);
 
+        Timing.CallDelayed(0.25f, () =>
+        {
+            foreach (ItemPickupBase itemPickupBase in locker.GetComponentsInChildren<ItemPickupBase>())
+            {
+                if (itemPickupBase.TryGetComponent(out Rigidbody rigidbody))
+                    rigidbody.isKinematic = false;
+            }
+        });
+        
         NetId = instance.netId;
         ClientSideRegistry.TrackedIds.Add(NetId);
     }
