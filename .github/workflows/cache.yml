@@ -2,7 +2,7 @@ name: Cache Unity Editor DLL
 
 on:
   workflow_dispatch:
-
+    
 jobs:
   cache-unity-dll:
     runs-on: ubuntu-latest
@@ -25,4 +25,6 @@ jobs:
 
       - name: Copy DLL
         if: steps.unity-setup.outputs.unity-editor-path != ''
-        run: cp "${{ steps.unity-setup.outputs.unity-editor-path }}/Data/Managed/UnityEngine/UnityEditor.dll" "${{ github.workspace }}/"
+        run: |
+          UNITY_DIR=$(dirname "${{ steps.unity-setup.outputs.unity-editor-path }}")
+          cp "$UNITY_DIR/Data/Managed/UnityEngine/UnityEditor.dll" "${{ github.workspace }}/"
