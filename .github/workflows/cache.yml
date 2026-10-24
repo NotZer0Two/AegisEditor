@@ -20,7 +20,6 @@ jobs:
         if: ${{ steps.download-unity-editor-dll.outputs.cache-hit }} == ''
         with:
           version-file: None
-          build-targets: StandaloneWindows64
           unity-version: 2021.3.17f1
           hub-version: 3.14.3 # disables auto-update; keeps /opt/unityhub
 
