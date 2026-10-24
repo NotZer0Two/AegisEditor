@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/pr.yml
+    uses: $/.github/workflows/pr.yml
     permissions:
       contents: write
       packages: read
