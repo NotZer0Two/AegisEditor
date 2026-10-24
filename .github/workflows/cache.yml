@@ -1,0 +1,27 @@
+name: Cache Unity Editor DLL
+
+on:
+  workflow_call: 
+
+jobs:
+  cache-unity-dll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get DLL from cache
+        id: download-unity-editor-dll
+        uses: actions/cache@v6.1.0
+        with:
+          key: UnityEditor-2021.3.17f1
+          path: ${{ github.workspace }}/UnityEditor.dll # TODO: update path later
+
+      - name: Setup Unity
+        id: unity-setup
+        uses: buildalon/unity-setup@v2.6.0
+        if: ${{ steps.download-unity-editor-dll.outputs.cache-hit }} == ''
+        with:
+          unity-version: 2021.3.17f1
+          hub-version: 3.14.3 # disables auto-update; keeps /opt/unityhub
+
+      - name: Copy DLL
+        if: ${{ steps.unity-setup.outputs.unity-editor-path }} != ''
+        run: cp "${{ steps.unity-setup.outputs.unity-editor-path }}/Data/Managed/UnityEngine/UnityEditor.dll" "${{ github.workspace }}/"

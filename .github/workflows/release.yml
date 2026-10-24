@@ -1,15 +1,12 @@
 name: Build Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Release version"
-        required: true
+  release:
+    types: [ published ]
 
 jobs:
   build:
-    uses: .github/workflows/pr.yml
+    uses: ./.github/workflows/pr.yml
     permissions:
       contents: write
       packages: read

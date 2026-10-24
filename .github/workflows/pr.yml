@@ -2,7 +2,6 @@ name: PR Build
 
 on:
   workflow_call:
-  workflow_dispatch:
   pull_request:
     branches: [ dev ]
 
@@ -11,7 +10,11 @@ env:
   PACKAGE: it.pyyra.aegiseditor
 
 jobs:
+  cache-unity-dll:
+    uses: ./github/workflows/cache.yml
+  
   build:
+    needs: cache-unity-dll
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,7 +30,11 @@ jobs:
         uses: Axwabo/scpsl-references-downloader@v1
 
       - name: Download Unity Editor reference
-        uses: .github/actions/download-editor-ref.yml
+        uses: actions/cache@v6.1.0
+        with:
+          path: ${{ env.ReferencePath }}/UnityEditor.dll
+          fail-on-cache-miss: true
+          key: UnityEditor-2021.3.17f1
 
       - name: Build
         run: dotnet build -c ${{ matrix.configuration }} -o ${{ env.OUT }}
