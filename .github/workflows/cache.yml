@@ -1,7 +1,7 @@
 name: Cache Unity Editor DLL
 
 on:
-  workflow_call: 
+  workflow_dispatch:
 
 jobs:
   cache-unity-dll:

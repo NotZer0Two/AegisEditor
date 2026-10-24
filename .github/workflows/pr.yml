@@ -10,9 +10,6 @@ env:
   PACKAGE: it.pyyra.aegiseditor
 
 jobs:
-  cache-unity-dll:
-    uses: $/.github/workflows/cache.yml
-  
   build:
     needs: cache-unity-dll
     runs-on: ubuntu-latest
