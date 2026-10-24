@@ -22,6 +22,7 @@
 
 
     <ItemGroup>
+        <Reference Include="UnityEditor" Private="false" />
         <Reference Include="UnityEngine" Private="false" />
         <Reference Include="UnityEngine.CoreModule" Publicize="true" Private="false" />
         <Reference Include="UnityEngine.PhysicsModule" Private="false" />
@@ -30,19 +31,12 @@
         <Reference Include="UnityEngine.IMGUIModule" Private="false" />
         <Reference Include="System.Core" Private="false" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
-
-    <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)../References/UnityEditor.dll')">
-        <Reference Include="UnityEditor" HintPath="$(MSBuildThisFileDirectory)../References/UnityEditor.dll" Private="false" />
-    </ItemGroup>
-    <ItemGroup Condition="!Exists('$(MSBuildThisFileDirectory)../References/UnityEditor.dll')">
-        <PackageReference Include="UnityEditor.Ref" Version="2021.3.17" />
-    </ItemGroup>
-
+    
     <ItemGroup>
-      <ProjectReference Include="..\AegisEditor.API\AegisEditor.API.csproj" />
+        <ProjectReference Include="..\AegisEditor.API\AegisEditor.API.csproj" />
     </ItemGroup>
 </Project>
