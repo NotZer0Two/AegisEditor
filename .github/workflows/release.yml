@@ -10,9 +10,6 @@ on:
 jobs:
   build:
     uses: .github/workflows/pr.yml
-    with: 
-      plugins-artifact: AegisEditor-release-${{ github.ref }}-plugins
-      package-artifact: AegisEditor-release-${{ github.ref }}-package
     permissions:
       contents: write
       packages: read

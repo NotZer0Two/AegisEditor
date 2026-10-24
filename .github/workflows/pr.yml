@@ -2,16 +2,9 @@ name: PR Build
 
 on:
   workflow_call:
+  workflow_dispatch:
   pull_request:
     branches: [ dev ]
-
-inputs:
-  plugins-artifact:
-    required: false
-    default: AegisEditor-pr-${{ github.event.pull_request.number }}-plugins
-  package-artifact:
-    required: false
-    default: AegisEditor-pr-${{ github.event.pull_request.number }}-unitypackage
 
 env:
   OUT: ${{ github.workspace }}/OUT
@@ -50,7 +43,7 @@ jobs:
       - name: Upload plugins
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: ${{ inputs.plugins-artifact }}
+          name: plugins
           retention-days: 7
           path: |
             ${{ env.OUT }}/AegisEditor.dll
@@ -67,6 +60,6 @@ jobs:
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.package-artifact }}
+          name: unitypackage
           retention-days: 7
           path: ${{ github.workspace }}/PackageOutput/${{ env.PACKAGE }}.unitypackage
