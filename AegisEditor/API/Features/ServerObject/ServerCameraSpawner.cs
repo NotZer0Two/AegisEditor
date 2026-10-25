@@ -26,10 +26,10 @@ public class ServerCameraSpawner : NetworkedObject
     {
         assets = PrefabCache.Get<Scp079CameraToy>(source.cameraType.GetName()).SpawnInstance(source.transform);
 
-        /*Transform t = assets.transform;
+        Transform t = assets.transform;
         t.SetParent(null);
         t.SetPositionAndRotation(source.transform.position, source.transform.rotation);
-        t.localScale = source.transform.lossyScale;*/
+        t.localScale = source.transform.lossyScale;
 
         assets.NetworkLabel = source.label;
         assets.NetworkHorizontalConstraint = source.horizontalConstraint;
