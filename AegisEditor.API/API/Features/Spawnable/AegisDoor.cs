@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AegisEditor.API.Enum;
 using UnityEditor;
 using UnityEngine;
@@ -36,6 +37,16 @@ public class AegisDoor : AegisSpawnable
     /// Permission.
     /// </summary>
     public DoorPermissionFlags Permissions;
+    
+    /// <summary>
+    /// Actions executed when the door opens.
+    /// </summary>
+    public List<AegisAction> onOpened = new();
+
+    /// <summary>
+    /// Actions executed when the door closes.
+    /// </summary>
+    public List<AegisAction> onClosed = new();
     
     /// <inheritdoc />
     public override void InitializeInEditor()
@@ -95,5 +106,18 @@ public class AegisDoor : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+    }
+    
+    /// <summary>
+    /// Executes the actions for the given state.
+    /// </summary>
+    /// <param name="opened">Whether the door opened.</param>
+    public void InvokeActions(bool opened, GameObject executor = null)
+    {
+        foreach (AegisAction action in opened ? onOpened : onClosed)
+        {
+            if (action != null)
+                action.Execute(executor);
+        }
     }
 }
