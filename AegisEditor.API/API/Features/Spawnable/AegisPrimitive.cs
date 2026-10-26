@@ -28,6 +28,7 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     /// <summary>
     /// The color of the primitive.
     /// </summary>
+    [ColorUsage(true, true)]
     public Color Color = Color.white;
 
     /// <summary>

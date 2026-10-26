@@ -9,7 +9,7 @@ namespace AegisEditor.Editor.Menu;
 /// </summary>
 public static class MiscMenu
 {
-    private const string Path = "/Spawnables/";
+    private const string Path = "/";
     
     [MenuItem(Editor.Path + Path + "Item")]
     private static void OnCreateItem() => BundleExtensions.GetBundle()?.AddItem(Selection.activeTransform);

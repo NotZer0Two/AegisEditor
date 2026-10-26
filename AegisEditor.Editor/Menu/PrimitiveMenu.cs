@@ -9,7 +9,7 @@ namespace AegisEditor.Editor.Menu;
 /// </summary>
 public static class PrimitiveMenu
 {
-    private const string Path = "/Spawnables/Primitives";
+    private const string Path = "/Primitives";
     
     [MenuItem(Editor.Path + Path + "/Quad")]
     private static void OnCreateQuadPrimitive() => BundleExtensions.GetBundle()?.AddPrimitive(Selection.activeTransform, SpawnablePrimitive.Quad);

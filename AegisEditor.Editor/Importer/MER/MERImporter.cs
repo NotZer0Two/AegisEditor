@@ -115,66 +115,69 @@ public sealed class SchematicImporter : Importer<SchematicObjectDataList>
         primitive.OnUpdate();
         return primitive.transform;
     }
-    
-private static Transform CreateLight(SchematicBlockData block, Transform parent, ImportContext context)
-{
-    var light = context.Bundle.AddLight(parent);
-    ImportContext.ApplyTransform(light.transform, block.Position, block.Rotation, null);
 
-    light.Color = GetColorFromString(block.Properties["Color"].ToString());
-    light.Intensity = float.Parse(block.Properties["Intensity"].ToString());
-    light.Range = float.Parse(block.Properties["Range"].ToString());
-    light.ShadowType = bool.Parse(block.Properties["Shadows"].ToString()) ? LightShadowType.None : LightShadowType.Soft;
-
-    context.TryAddAnimator(light.gameObject, block.AnimatorName);
-    light.OnUpdate();
-    return light.transform;
-}
-
-private static Transform CreatePickup(SchematicBlockData block, Transform parent, ImportContext context)
-{
-    SpawnableItemType type = (SpawnableItemType)Enum.Parse(typeof(SpawnableItemType), block.Properties["ItemType"].ToString());
-    var pickup = context.Bundle.AddItem(parent, type);
-    ImportContext.ApplyTransform(pickup.transform, block.Position, block.Rotation, block.Scale);
-
-    context.TryAddAnimator(pickup.gameObject, block.AnimatorName);
-    return pickup.transform;
-}
-
-private static Transform CreateWorkstation(SchematicBlockData block, Transform parent, ImportContext context)
-{
-    var workstation = context.Bundle.AddAsset(parent);
-    ImportContext.ApplyTransform(workstation.transform, block.Position, block.Rotation, block.Scale);
-
-    context.TryAddAnimator(workstation.gameObject, block.AnimatorName);
-    return workstation.transform;
-}
-
-private static Color GetColorFromString(string colorText)
-{
-    Color color = new(-1f, -1f, -1f);
-    string[] parts = colorText.Split(':');
-
-    if (parts.Length >= 4)
+    private static Transform CreateLight(SchematicBlockData block, Transform parent, ImportContext context)
     {
-        if (float.TryParse(parts[0], out float r))
-            color.r = r / 255f;
+        var light = context.Bundle.AddLight(parent);
+        ImportContext.ApplyTransform(light.transform, block.Position, block.Rotation, null);
 
-        if (float.TryParse(parts[1], out float g))
-            color.g = g / 255f;
+        light.Color = GetColorFromString(block.Properties["Color"].ToString());
+        light.Intensity = float.Parse(block.Properties["Intensity"].ToString());
+        light.Range = float.Parse(block.Properties["Range"].ToString());
+        if (block.Properties.TryGetValue("Shadows", out object shadows) &&
+            bool.TryParse(shadows?.ToString(), out bool hasShadows))
+            light.ShadowType = hasShadows ? LightShadowType.None : LightShadowType.Soft;
 
-        if (float.TryParse(parts[2], out float b))
-            color.b = b / 255f;
-
-        if (float.TryParse(parts[3], out float a))
-            color.a = a;
-
-        return color != new Color(-1f, -1f, -1f) ? color : Color.magenta * 3f;
+        context.TryAddAnimator(light.gameObject, block.AnimatorName);
+        light.OnUpdate();
+        return light.transform;
     }
 
-    if (colorText[0] != '#' && colorText.Length == 8)
-        colorText = '#' + colorText;
+    private static Transform CreatePickup(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        SpawnableItemType type =
+            (SpawnableItemType)Enum.Parse(typeof(SpawnableItemType), block.Properties["ItemType"].ToString());
+        var pickup = context.Bundle.AddItem(parent, type);
+        ImportContext.ApplyTransform(pickup.transform, block.Position, block.Rotation, block.Scale);
 
-    return ColorUtility.TryParseHtmlString(colorText, out color) ? color : Color.magenta * 3f;
-}
+        context.TryAddAnimator(pickup.gameObject, block.AnimatorName);
+        return pickup.transform;
+    }
+
+    private static Transform CreateWorkstation(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        var workstation = context.Bundle.AddAsset(parent);
+        ImportContext.ApplyTransform(workstation.transform, block.Position, block.Rotation, block.Scale);
+
+        context.TryAddAnimator(workstation.gameObject, block.AnimatorName);
+        return workstation.transform;
+    }
+
+    private static Color GetColorFromString(string colorText)
+    {
+        Color color = new(-1f, -1f, -1f);
+        string[] parts = colorText.Split(':');
+
+        if (parts.Length >= 4)
+        {
+            if (float.TryParse(parts[0], out float r))
+                color.r = r / 255f;
+
+            if (float.TryParse(parts[1], out float g))
+                color.g = g / 255f;
+
+            if (float.TryParse(parts[2], out float b))
+                color.b = b / 255f;
+
+            if (float.TryParse(parts[3], out float a))
+                color.a = a;
+
+            return color != new Color(-1f, -1f, -1f) ? color : Color.magenta * 3f;
+        }
+
+        if (colorText[0] != '#' && colorText.Length == 8)
+            colorText = '#' + colorText;
+
+        return ColorUtility.TryParseHtmlString(colorText, out color) ? color : Color.magenta * 3f;
+    }
 }
