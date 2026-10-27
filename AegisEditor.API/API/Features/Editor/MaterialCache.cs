@@ -97,27 +97,81 @@ public static class MaterialCache
             Object.Destroy(material);
     }
 
+    private static Pipeline GetPipeline()
+    {
+        RenderPipelineAsset asset = GraphicsSettings.currentRenderPipeline;
+        if (asset == null)
+            return Pipeline.BuiltIn;
+
+        return asset.GetType().Name.Contains("HDRenderPipeline") ? Pipeline.Hdrp : Pipeline.Urp;
+    }
+
     private static Material CreateMaterial(Color color)
     {
-        bool srp = GraphicsSettings.renderPipelineAsset != null;
-        var material = new Material(srp ? Shader.Find("HDRP/Lit") : Shader.Find("Standard"));
+        Pipeline pipeline = GetPipeline();
+
+        Shader shader = pipeline switch
+        {
+            Pipeline.Hdrp => Shader.Find("HDRP/Lit"),
+            Pipeline.Urp => Shader.Find("Universal Render Pipeline/Lit"),
+            _ => Shader.Find("Standard")
+        };
+
+        var material = new Material(shader);
 
         if (color.a < 1f)
         {
-            if (srp)
-                material.SetFloat("_SurfaceType", 1f);
-            else
+            switch (pipeline)
             {
-                material.SetFloat("_Mode", 3);
-                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                material.EnableKeyword("_ALPHABLEND_ON");
-                material.renderQueue = 3000;
+                case Pipeline.Hdrp:
+                    material.SetFloat("_SurfaceType", 1f);
+                    material.SetFloat("_BlendMode", 0f);
+                    material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+                    material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                    material.SetFloat("_ZWrite", 0f);
+                    material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                    material.SetOverrideTag("RenderType", "Transparent");
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
+                case Pipeline.Urp:
+                    material.SetFloat("_Surface", 1f);
+                    material.SetFloat("_Blend", 0f);
+                    material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+                    material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                    material.SetFloat("_ZWrite", 0f);
+                    material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                    material.SetOverrideTag("RenderType", "Transparent");
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
+                default:
+                    material.SetFloat("_Mode", 3f);
+                    material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                    material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                    material.EnableKeyword("_ALPHABLEND_ON");
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
             }
         }
 
-        material.SetColor(srp ? "_BaseColor" : "_Color", color);
+        Color albedo = new Color(Mathf.Clamp01(color.r), Mathf.Clamp01(color.g), Mathf.Clamp01(color.b), color.a);
+        material.SetColor(pipeline == Pipeline.BuiltIn ? "_Color" : "_BaseColor", albedo);
 
+        if (color.maxColorComponent > 1f)
+        {
+            switch (pipeline)
+            {
+                case Pipeline.Hdrp:
+                    material.SetFloat("_UseEmissiveIntensity", 0f);
+                    material.SetColor("_EmissiveColor", color);
+                    break;
+                default:
+                    material.EnableKeyword("_EMISSION");
+                    material.SetColor("_EmissionColor", color);
+                    break;
+            }
+
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+        }
         return material;
     }
 
@@ -125,12 +179,8 @@ public static class MaterialCache
     {
         PrimitiveType primitiveType = type.ToPrimitiveType();
 
-        Mesh mesh = Resources.GetBuiltinResource<Mesh>(primitiveType + ".fbx");
-        if (mesh != null)
-            return mesh;
-
         GameObject obj = GameObject.CreatePrimitive(primitiveType);
-        mesh = obj.GetComponent<MeshFilter>().sharedMesh;
+        Mesh mesh = obj.GetComponent<MeshFilter>().sharedMesh;
         Object.DestroyImmediate(obj);
         return mesh;
     }
