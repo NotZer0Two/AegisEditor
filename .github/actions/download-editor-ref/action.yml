@@ -16,6 +16,7 @@ runs:
       uses: buildalon/unity-setup@v2.6.0
       if: ${{ steps.download-unity-editor-dll.outputs.cache-hit }} == ''
       with:
+        version-file: None
         unity-version: 2021.3.17f1
         hub-version: 3.14.3 # disables auto-update; keeps /opt/unityhub
 
