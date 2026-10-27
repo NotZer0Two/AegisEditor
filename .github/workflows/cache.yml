@@ -8,7 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set project version
-        run: echo 2021.3.17f1 >> ProjectVersion.txt
+        run: |
+          mkdir unity-setup
+          cd unity-setup
+          echo 2021.3.17f1 >> ProjectVersion.txt
         shell: bash
 
       - name: Get DLL from cache
