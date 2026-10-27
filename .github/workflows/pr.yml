@@ -26,12 +26,6 @@ jobs:
 
       - name: Download SCP:SL references
         uses: Axwabo/scpsl-references-downloader@v1
-        
-      - name: Create Project Version
-        run: |
-          mkdir unity-version
-          cd unity-version
-          echo "$UNITY" >> ProjectVersion.txt
 
       - name: Get Unity Editor DLL from cache
         id: download-unity-editor-dll
@@ -45,6 +39,8 @@ jobs:
         uses: buildalon/unity-setup@v2.6.0
         if: steps.download-unity-editor-dll.outputs.cache-hit == ''
         with:
+          version-file: None
+          unity-version: ${{ env.UNITY }}
           hub-version: 3.14.3 # disables auto-update; keeps /opt/unityhub
 
       - name: Copy Editor DLL
