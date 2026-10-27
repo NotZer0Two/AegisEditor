@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.ClientObject;
 using AegisEditor.API.Features.ServerObject;
 using AegisEditor.API.Features.Spawnable;
@@ -26,6 +27,7 @@ public static class ClientSideRegistry
     private static readonly HashSet<BundleInfo> Tracked = new();
     private static readonly Dictionary<uint, Entry> ByNetId = new();
     private static readonly Dictionary<uint, Player> TestOwners = new();
+    private static readonly Dictionary<PrefabInfo, Player[]> Pending = new();
     internal static HashSet<uint> TrackedIds = new();
 
     /// <summary>
@@ -38,15 +40,15 @@ public static class ClientSideRegistry
         [typeof(AegisCullingParent)] = s => new ClientSideCullingParent(((AegisCullingParent)s)),
         [typeof(AegisLight)] = s => new ClientSideLight(((AegisLight)s)),
         [typeof(AegisText)] = s => new ClientSideText(((AegisText)s)),
-        
-        // Hybrid
+
         [typeof(AegisCapybara)] = s => new ClientSideCapybara((AegisCapybara)s),
-        
-        // Server Side
+
         [typeof(AegisItemSpawner)] = s => new ServerItemSpawner((AegisItemSpawner)s),
         [typeof(AegisAssets)] = s => new ServerAssetsSpawner((AegisAssets)s),
         [typeof(AegisDoor)] = s => new ServerDoorSpawner((AegisDoor)s),
         [typeof(AegisWaypoint)] = s => new ServerWaypointSpawner((AegisWaypoint)s),
+        [typeof(AegisCamera)] = s => new ServerCameraSpawner((AegisCamera)s),
+        [typeof(AegisLocker)] = s => new ServerLockerSpawner((AegisLocker)s),
         [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
     };
 
@@ -69,19 +71,26 @@ public static class ClientSideRegistry
         AegisAPI.BundleLoaded -= Track;
 
         foreach (BundleInfo bundle in Tracked)
+        {
             bundle.PrefabSpawned -= OnSpawned;
+            bundle.BundleReloaded -= OnReloaded;
+        }
 
         foreach (PrefabInfo prefab in Entries.Keys)
             prefab.PrefabDespawning -= OnDespawning;
 
         Tracked.Clear();
         Entries.Clear();
+        Pending.Clear();
     }
 
     private static void Track(BundleInfo bundle)
     {
-        if (Tracked.Add(bundle))
-            bundle.PrefabSpawned += OnSpawned;
+        if (!Tracked.Add(bundle))
+            return;
+
+        bundle.PrefabSpawned += OnSpawned;
+        bundle.BundleReloaded += OnReloaded;
     }
 
     /// <summary>
@@ -109,7 +118,6 @@ public static class ClientSideRegistry
 
         entry.Ready.Remove(player);
 
-        // little prevention if the player isn't connected better than nothing ig.
         if (player.IsDestroyed)
             return;
 
@@ -118,7 +126,7 @@ public static class ClientSideRegistry
         foreach (NetworkedObject obj in entry.Objects)
             obj.Destroy(player);
     }
-    
+
     /// <summary>
     /// Useful Function to see if a player can or is getting updates from a prefab.
     /// </summary>
@@ -127,7 +135,7 @@ public static class ClientSideRegistry
     /// <returns>If the player has spawned the entire schematic and if its getting updates.</returns>
     public static bool IsReady(PrefabInfo prefab, Player player) =>
         Entries.TryGetValue(prefab, out Entry entry) && entry.Ready.Contains(player);
-    
+
     /// <summary>
     /// Checks if a server-side schematic object must not be sent to a player.
     /// </summary>
@@ -174,10 +182,11 @@ public static class ClientSideRegistry
         {
             if (AegisPlugin.Instance.Config.FixServerSideWaypoints && obj is IServerSidedWaypoint)
                 continue;
-            
+
             if (TrackedIds.Contains(obj.NetId))
                 ByNetId[obj.NetId] = entry;
         }
+
         prefab.PrefabDespawning += OnDespawning;
     }
 
@@ -185,22 +194,41 @@ public static class ClientSideRegistry
     {
         prefab.PrefabDespawning -= OnDespawning;
 
-        if (!Entries.Remove(prefab, out Entry entry))
+        if (!Entries.TryGetValue(prefab, out Entry entry))
             return;
-        
+
+        Player[] players = entry.Spawned.ToArray();
+        Pending[prefab] = players;
+
+        foreach (Player player in players)
+        {
+            prefab.Hide(player);
+            DestroyFor(prefab, player);
+        }
+
+        Entries.Remove(prefab);
+
         foreach (NetworkedObject obj in entry.Objects)
             ByNetId.Remove(obj.NetId);
+    }
 
-        foreach (Player player in entry.Spawned)
+    private static void OnReloaded()
+    {
+        foreach (KeyValuePair<PrefabInfo, Player[]> pair in Pending)
         {
-            if (player.IsDestroyed)
+            if (!Entries.ContainsKey(pair.Key))
                 continue;
 
-            foreach (NetworkedObject obj in entry.Objects)
-                obj.Destroy(player);
+            foreach (Player player in pair.Value)
+            {
+                if (!player.IsDestroyed)
+                    pair.Key.Show(player);
+            }
         }
+
+        Pending.Clear();
     }
-    
+
     /// <summary>
     /// Creates the networked object of a spawnable without a prefab. Used for testing.
     /// </summary>
@@ -221,7 +249,7 @@ public static class ClientSideRegistry
 
         return obj;
     }
-    
+
     /// <summary>
     /// Removes the test owner of an object.
     /// </summary>

@@ -294,4 +294,62 @@ public static class AssetsExtensions
 
         return itemspawner;
     }
+    
+    /// <summary>
+    /// Adds a camera to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="camera">camera.</param>
+    /// <returns>The newly created capybara.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddCamera(Selection.activeTransform, SpawnableCamera.Surface);</example>
+    public static AegisCamera AddCamera(this AegisPrefab bundle, Transform parent, SpawnableCamera camera = SpawnableCamera.Surface)
+    {
+        GameObject go = new GameObject($"{camera}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisCamera itemspawner = go.AddComponent<AegisCamera>();
+        itemspawner.cameraType = camera;
+
+        itemspawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(itemspawner.gameObject, $"Created Camera");
+        Selection.activeGameObject = itemspawner.gameObject;
+
+        return itemspawner;
+    }
+    
+    /// <summary>
+    /// Adds a locker to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="locker">The locker type.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddLocker(Selection.activeTransform, SpawnableLockerType.RifleRack);</example>
+    public static AegisLocker AddLocker(this AegisPrefab bundle, Transform parent, SpawnableLockerType locker = SpawnableLockerType.LargeGunLocker)
+    {
+        GameObject go = new GameObject($"{locker}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisLocker lockerSpawner = go.AddComponent<AegisLocker>();
+        lockerSpawner.lockerType = locker;
+
+        lockerSpawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Locker");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
 }
