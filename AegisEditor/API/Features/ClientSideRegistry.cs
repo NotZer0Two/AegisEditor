@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.ClientObject;
 using AegisEditor.API.Features.ServerObject;
 using AegisEditor.API.Features.Spawnable;
