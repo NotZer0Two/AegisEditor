@@ -1,4 +1,5 @@
 using AegisEditor.API.Enum;
+using AegisEditor.API.Features.Actions;
 using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
 using UnityEditor;
@@ -348,6 +349,60 @@ public static class AssetsExtensions
         lockerSpawner.InitializeInEditor();
 
         Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Locker");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
+    
+    /// <summary>
+    /// Adds an interactable to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="shape">The shape type.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddInteractable(Selection.activeTransform, AegisInteractableShape.Box);</example>
+    public static AegisInteractable AddInteractable(this AegisPrefab bundle, Transform parent, AegisInteractableShape shape = AegisInteractableShape.Box)
+    {
+        GameObject go = new GameObject($"{shape} Interactable")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisInteractable lockerSpawner = go.AddComponent<AegisInteractable>();
+        lockerSpawner.Shape = shape;
+
+        lockerSpawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Interactable");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
+    
+    /// <summary>
+    /// Adds a trigger to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddTrigger(Selection.activeTransform);</example>
+    public static AegisTrigger AddTrigger(this AegisPrefab bundle, Transform parent)
+    {
+        GameObject go = new GameObject($"Trigger")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisTrigger lockerSpawner = go.AddComponent<AegisTrigger>();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Trigger");
         Selection.activeGameObject = lockerSpawner.gameObject;
 
         return lockerSpawner;
