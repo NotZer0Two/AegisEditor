@@ -1,3 +1,4 @@
+using AegisEditor.API.Features.ScriptableObjects;
 using UnityEngine;
 
 namespace AegisEditor.API.Features.Editor;

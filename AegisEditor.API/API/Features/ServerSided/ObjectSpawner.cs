@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
 using UnityEngine;
 
@@ -38,6 +39,14 @@ public abstract class ObjectSpawner
     /// </summary>
     /// <param name="info">The object to attach a collider.</param>
     public virtual void OnRequestCollider(AegisSpawnable info, List<Collider> colliders)
+    {
+    }
+    
+    /// <summary>
+    /// Request a position to spawn a prefab based on the <see cref="AegisSpawningLocation"/>.
+    /// </summary>
+    /// <param name="location">The location.</param>
+    public virtual void OnRequestPosition(PrefabInfo prefab, AegisSpawningLocation? location)
     {
     }
 }

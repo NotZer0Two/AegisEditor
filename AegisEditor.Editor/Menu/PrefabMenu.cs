@@ -15,6 +15,7 @@ public static class PrefabMenu
     {
         GameObject prefabGo = new GameObject("Prefab");
         AegisPrefab bundle = prefabGo.AddComponent<AegisPrefab>();
+        prefabGo.AddComponent<AegisSpawningLocation>();
 
         string bundlePath = $"Assets/Prefabs/Prefab.prefab";
 

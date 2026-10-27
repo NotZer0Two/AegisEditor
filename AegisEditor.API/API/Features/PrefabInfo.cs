@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AegisEditor.API.Extensions;
+using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces;
 using UnityEngine;
@@ -93,12 +94,14 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
             Position = position;
             Rotation = rotation;
             Scale = scale;
-
+            
             Object = UnityEngine.Object.Instantiate(prefabInstance, Position, Quaternion.Euler(Rotation));
             Object.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Object.transform.localScale = Scale;
 
             Spawnables = Object.GetComponentsInChildren<AegisSpawnable>();
+            
+            AegisAPI.ServerSpawner.OnRequestPosition(this, Object.GetComponent<AegisSpawningLocation>());
             
             foreach (AegisSpawnable spawnable in Spawnables)
             {
