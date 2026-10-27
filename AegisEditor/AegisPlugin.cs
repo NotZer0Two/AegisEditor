@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -47,6 +48,7 @@ namespace AegisEditor;
 public class AegisPlugin : Plugin<AegisConfig>
 {
     private GameObject? _updaterObject;
+    private readonly List<PrefabInfo> _autoSpawnedPrefabs = new();
     
     /// <inheritdoc/>
     public override string Name => "AegisEditor";
@@ -108,6 +110,8 @@ public class AegisPlugin : Plugin<AegisConfig>
         ClientSideSpawner.BudgetMs = Config.SpawnBudgetMs;
 
         ServerEvents.MapGenerated += OnMapGenerated;
+        ServerEvents.RoundRestarted += DespawnAutoSpawnedPrefabs;
+        ServerEvents.RoundEnded += ev => DespawnAutoSpawnedPrefabs();
         
         if (Config.DespawnOnRoundRestart)
             ServerEvents.RoundRestarted += AegisSchematic.DespawnAll;
@@ -129,6 +133,8 @@ public class AegisPlugin : Plugin<AegisConfig>
         Harmony.UnpatchAll();
         ServerEvents.WaitingForPlayers -= AegisAPI.ServerSpawner.Initialize;
         ServerEvents.MapGenerated -= OnMapGenerated;
+        ServerEvents.RoundRestarted -= DespawnAutoSpawnedPrefabs;
+        DespawnAutoSpawnedPrefabs();
 
         ClientSideRegistry.Disable();
         UnityEngine.Object.Destroy(_updaterObject);
@@ -158,8 +164,19 @@ public class AegisPlugin : Plugin<AegisConfig>
                     return;
                 }
 
+                _autoSpawnedPrefabs.Add(prefab);
                 prefab.ShowAll();
             }
         });
+    }
+    
+    private void DespawnAutoSpawnedPrefabs()
+    {
+        foreach (PrefabInfo prefab in _autoSpawnedPrefabs)
+        {
+            prefab.Unload();
+        }
+
+        _autoSpawnedPrefabs.Clear();
     }
 }
