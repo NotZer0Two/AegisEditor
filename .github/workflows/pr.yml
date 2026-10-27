@@ -26,11 +26,7 @@ jobs:
         uses: Axwabo/scpsl-references-downloader@v1
 
       - name: Download Unity Editor reference
-        uses: actions/cache@v6.1.0
-        with:
-          path: ${{ env.ReferencePath }}/UnityEditor.dll
-          fail-on-cache-miss: true
-          key: UnityEditor-2021.3.17f1
+        uses: $/.github/actions/download-editor-ref.yml
 
       - name: Build
         run: dotnet build -c ${{ matrix.configuration }} -o ${{ env.OUT }}
