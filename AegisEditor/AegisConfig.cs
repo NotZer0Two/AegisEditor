@@ -14,6 +14,12 @@ public class AegisConfig
     public bool AutoSpawn { get; set; } = true;
     
     /// <summary>
+    /// Auto spawns the schematics for the player.
+    /// </summary>
+    [Description("Schematics will automatically be update when deleted / updated in the file system")]
+    public bool DynamicUpdate { get; set; } = true;
+    
+    /// <summary>
     /// Seconds between update ticks.
     /// </summary>
     [Description("Seconds between update ticks, higher is cheaper but less smooth")]
