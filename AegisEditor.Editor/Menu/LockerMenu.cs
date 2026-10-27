@@ -9,7 +9,7 @@ namespace AegisEditor.Editor.Menu;
 /// </summary>
 public static class LockerMenu
 {
-    private const string Path = "/Spawnables/Lockers";
+    private const string Path = "/Lockers";
     private const string PedestalPath = Path + "/Pedestals";
 
     // Medkits

@@ -9,7 +9,7 @@ namespace AegisEditor.Editor.Menu;
 /// </summary>
 public static class CameraMenu
 {
-    private const string Path = "/Spawnables/Cameras";
+    private const string Path = "/Cameras";
     
     [MenuItem(Editor.Path + Path + "/Surface")]
     private static void OnCreateQuadPrimitive() => BundleExtensions.GetBundle()?.AddCamera(Selection.activeTransform, SpawnableCamera.Surface);
