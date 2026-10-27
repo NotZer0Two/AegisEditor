@@ -9,6 +9,7 @@ on:
 env:
   OUT: ${{ github.workspace }}/OUT
   PACKAGE: it.pyyra.aegiseditor
+  PACKAGE_CORE: it.pyyra.aegiseditor.core
   UNITY: 2021.3.17f1
 
 jobs:
@@ -55,10 +56,10 @@ jobs:
       - name: Prepare Unity package
         if: matrix.configuration == 'Release'
         run: |
-          find Packages -name \*.meta >> metaList
+          find Packages -name \*.meta >> FullMetaList
+          find Packages -name \*.dll.meta >> CoreMetaList
           cp ${{ env.OUT }}/AegisEditor.API.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Runtime/
           cp ${{ env.OUT }}/AegisEditor.Editor.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Editor/
-          mkdir PackageOutput
 
       - name: Upload plugins
         uses: actions/upload-artifact@v7.0.2
@@ -69,17 +70,24 @@ jobs:
             ${{ env.OUT }}/AegisEditor.dll
             ${{ env.OUT }}/AegisEditor.API.dll
 
-      - name: Create Unity package
+      - name: Create Full Unity package
         if: matrix.configuration == 'Release'
         uses: pCYSl5EDgo/create-unitypackage@master
         with:
-          package-path: ${{ github.workspace }}/PackageOutput/${{ env.PACKAGE }}.unitypackage
-          include-files: metaList
+          package-path: ${{ env.OUT }}/${{ env.PACKAGE }}.unitypackage
+          include-files: FullMetaList
 
-      - name: Upload Unity package
+      - name: Create Core Unity package
+        if: matrix.configuration == 'Release'
+        uses: pCYSl5EDgo/create-unitypackage@master
+        with:
+          package-path: ${{ env.OUT }}/${{ env.PACKAGE_CORE }}.unitypackage
+          include-files: CoreMetaList
+
+      - name: Upload Unity packages
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: unitypackage
+          name: unitypackages
           retention-days: 7
-          path: ${{ github.workspace }}/PackageOutput/${{ env.PACKAGE }}.unitypackage
+          path: ${{ env.OUT }}/*.unitypackage
