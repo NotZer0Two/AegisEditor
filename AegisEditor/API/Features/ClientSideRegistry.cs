@@ -47,6 +47,7 @@ public static class ClientSideRegistry
         [typeof(AegisAssets)] = s => new ServerAssetsSpawner((AegisAssets)s),
         [typeof(AegisDoor)] = s => new ServerDoorSpawner((AegisDoor)s),
         [typeof(AegisWaypoint)] = s => new ServerWaypointSpawner((AegisWaypoint)s),
+        [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
     };
 
     /// <summary>

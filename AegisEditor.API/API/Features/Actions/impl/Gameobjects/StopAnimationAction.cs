@@ -31,7 +31,7 @@ public class StopAnimationAction : AegisAction
             animator.Rebind();
             animator.Update(0f);
         }
-
+        
         animator.enabled = false;
     }
 }

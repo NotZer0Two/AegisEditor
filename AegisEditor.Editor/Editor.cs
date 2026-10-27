@@ -27,6 +27,7 @@ public class Editor
         typeof(Animator),
         typeof(AegisPrefab),
         typeof(AegisSpawnable),
+        typeof(AegisAction),
     };
 
     /// <summary>
