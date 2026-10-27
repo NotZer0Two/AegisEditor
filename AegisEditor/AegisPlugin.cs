@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,14 +7,17 @@ using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features;
 using AegisEditor.API.Public;
+using AegisEditor.API.Struct;
 using AegisEditor.Updaters;
 using HarmonyLib;
 using Interactables.Interobjects;
+using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features;
 using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
 using LabApi.Loader.Features.Plugins.Enums;
+using MEC;
 using Mirror;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
@@ -44,6 +48,7 @@ namespace AegisEditor;
 public class AegisPlugin : Plugin<AegisConfig>
 {
     private GameObject? _updaterObject;
+    private readonly List<PrefabInfo> _autoSpawnedPrefabs = new();
     
     /// <inheritdoc/>
     public override string Name => "AegisEditor";
@@ -89,7 +94,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
-        AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner());
+        AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         
@@ -104,6 +109,10 @@ public class AegisPlugin : Plugin<AegisConfig>
         Updater.Interval = Config.UpdateInterval;
         ClientSideSpawner.BudgetMs = Config.SpawnBudgetMs;
 
+        ServerEvents.MapGenerated += OnMapGenerated;
+        ServerEvents.RoundRestarted += DespawnAutoSpawnedPrefabs;
+        ServerEvents.RoundEnded += ev => DespawnAutoSpawnedPrefabs();
+        
         if (Config.DespawnOnRoundRestart)
             ServerEvents.RoundRestarted += AegisSchematic.DespawnAll;
         
@@ -111,6 +120,11 @@ public class AegisPlugin : Plugin<AegisConfig>
             PlayerEvents.Joined += ev => Updater.SpawnAllFor(ev.Player);
         
         PlayerEvents.Left += ev => Updater.DestroyAllFor(ev.Player);
+
+        if (Config.DynamicUpdate)
+        {
+            StaticUnityMethods.OnUpdate += AegisAPI.CheckForFileChanges;
+        }
     }
 
     /// <inheritdoc/>
@@ -118,11 +132,51 @@ public class AegisPlugin : Plugin<AegisConfig>
     {
         Harmony.UnpatchAll();
         ServerEvents.WaitingForPlayers -= AegisAPI.ServerSpawner.Initialize;
+        ServerEvents.MapGenerated -= OnMapGenerated;
+        ServerEvents.RoundRestarted -= DespawnAutoSpawnedPrefabs;
+        DespawnAutoSpawnedPrefabs();
 
         ClientSideRegistry.Disable();
         UnityEngine.Object.Destroy(_updaterObject);
         _updaterObject = null;
         Updater = null;
         Instance = null;
+    }
+
+    private void OnMapGenerated(MapGeneratedEventArgs ev)
+    {
+        Timing.CallDelayed(1.5f, () =>
+        {
+            foreach (AutoSpawnEntry entry in Config.AutoSpawns)
+            {
+                if (!AegisAPI.TryLoadBundle(entry.Bundle, out BundleInfo bundle) || !bundle.Base.Contains(entry.Prefab))
+                {
+                    Logger.Warn(
+                        $"Auto spawn skipped, bundle \"{entry.Bundle}\" or prefab \"{entry.Prefab}\" is missing");
+                    return;
+                }
+
+                PrefabInfo prefab = bundle.CreatePrefab(entry.Prefab);
+                if (prefab == null || !prefab.Spawn(Vector3.zero, Vector3.one, Vector3.one))
+                {
+                    prefab?.Unload();
+                    Logger.Warn($"Failed to spawn \"{entry.Prefab}\"");
+                    return;
+                }
+
+                _autoSpawnedPrefabs.Add(prefab);
+                prefab.ShowAll();
+            }
+        });
+    }
+    
+    private void DespawnAutoSpawnedPrefabs()
+    {
+        foreach (PrefabInfo prefab in _autoSpawnedPrefabs)
+        {
+            prefab.Unload();
+        }
+
+        _autoSpawnedPrefabs.Clear();
     }
 }

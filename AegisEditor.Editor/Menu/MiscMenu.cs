@@ -9,7 +9,7 @@ namespace AegisEditor.Editor.Menu;
 /// </summary>
 public static class MiscMenu
 {
-    private const string Path = "/Spawnables/";
+    private const string Path = "/";
     
     [MenuItem(Editor.Path + Path + "Item")]
     private static void OnCreateItem() => BundleExtensions.GetBundle()?.AddItem(Selection.activeTransform);
@@ -31,6 +31,12 @@ public static class MiscMenu
     
     [MenuItem(Editor.Path + Path + "Asset")]
     private static void OnCreateAsset() => BundleExtensions.GetBundle()?.AddAsset(Selection.activeTransform);
+    
+    [MenuItem(Editor.Path + Path + "Interactable")]
+    private static void OnCreateInteractable() => BundleExtensions.GetBundle()?.AddInteractable(Selection.activeTransform, AegisInteractableShape.Box);
+    
+        [MenuItem(Editor.Path + Path + "Trigger")] 
+        private static void OnCreateTrigger() => BundleExtensions.GetBundle()?.AddTrigger(Selection.activeTransform);
     
     [MenuItem(Editor.Path + "/Spawnables", true)]
     private static bool OnPrimitiveValidation() => BundleExtensions.GetBundle() != null;

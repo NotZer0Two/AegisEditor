@@ -1,4 +1,5 @@
 using AegisEditor.API.Enum;
+using AegisEditor.API.Features.Actions;
 using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
 using UnityEditor;
@@ -264,5 +265,146 @@ public static class AssetsExtensions
         Selection.activeGameObject = itemspawner.gameObject;
 
         return itemspawner;
+    }
+    
+    /// <summary>
+    /// Adds a door to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="asset">asset.</param>
+    /// <returns>The newly created capybara.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddAsset(Selection.activeTransform, SpawnableAssetType.Workstation);</example>
+    public static AegisAssets AddInteractable(this AegisPrefab bundle, Transform parent, SpawnableAssetType asset = SpawnableAssetType.Workstation)
+    {
+        GameObject go = new GameObject($"{asset}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisAssets itemspawner = go.AddComponent<AegisAssets>();
+        itemspawner.Assets = asset;
+
+        itemspawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(itemspawner.gameObject, $"Created Asset");
+        Selection.activeGameObject = itemspawner.gameObject;
+
+        return itemspawner;
+    }
+    
+    /// <summary>
+    /// Adds a camera to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="camera">camera.</param>
+    /// <returns>The newly created capybara.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddCamera(Selection.activeTransform, SpawnableCamera.Surface);</example>
+    public static AegisCamera AddCamera(this AegisPrefab bundle, Transform parent, SpawnableCamera camera = SpawnableCamera.Surface)
+    {
+        GameObject go = new GameObject($"{camera}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisCamera itemspawner = go.AddComponent<AegisCamera>();
+        itemspawner.cameraType = camera;
+
+        itemspawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(itemspawner.gameObject, $"Created Camera");
+        Selection.activeGameObject = itemspawner.gameObject;
+
+        return itemspawner;
+    }
+    
+    /// <summary>
+    /// Adds a locker to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="locker">The locker type.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddLocker(Selection.activeTransform, SpawnableLockerType.RifleRack);</example>
+    public static AegisLocker AddLocker(this AegisPrefab bundle, Transform parent, SpawnableLockerType locker = SpawnableLockerType.LargeGunLocker)
+    {
+        GameObject go = new GameObject($"{locker}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisLocker lockerSpawner = go.AddComponent<AegisLocker>();
+        lockerSpawner.lockerType = locker;
+
+        lockerSpawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Locker");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
+    
+    /// <summary>
+    /// Adds an interactable to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="shape">The shape type.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddInteractable(Selection.activeTransform, AegisInteractableShape.Box);</example>
+    public static AegisInteractable AddInteractable(this AegisPrefab bundle, Transform parent, AegisInteractableShape shape = AegisInteractableShape.Box)
+    {
+        GameObject go = new GameObject($"{shape} Interactable")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisInteractable lockerSpawner = go.AddComponent<AegisInteractable>();
+        lockerSpawner.Shape = shape;
+
+        lockerSpawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Interactable");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
+    
+    /// <summary>
+    /// Adds a trigger to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddTrigger(Selection.activeTransform);</example>
+    public static AegisTrigger AddTrigger(this AegisPrefab bundle, Transform parent)
+    {
+        GameObject go = new GameObject($"Trigger")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisTrigger lockerSpawner = go.AddComponent<AegisTrigger>();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Trigger");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
     }
 }

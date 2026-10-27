@@ -13,7 +13,7 @@
 
 Aegis Editor is a schematic and prefab editor for SCP: Secret Laboratory servers (LabAPI), built on Unity. It is a port of MeowEditor, with a cleaner API and more features.
 
-## Features
+# Features
 
 - **Asset bundles** - Schematics can be packed and compressed, replacing the classic `.json` format with smaller, faster-loading files.
 - **Editor API** - An easy-to-use, powerful API for both the editor and in-game.
@@ -21,7 +21,9 @@ Aegis Editor is a schematic and prefab editor for SCP: Secret Laboratory servers
 - **Fully customizable** - Control exactly what gets sent to each player, which makes features like animations especially powerful.
 - **Migration** - You can import MER schematics and many more format right out of the box.
 
-## Installation
+# Installation
+
+## Server Plugin
 
 1. Download `AegisEditor.dll` and `AegisEditor.API.dll` from the [releases page](https://github.com/NotZer0Two/AegisEditor/releases).
 2. Place `AegisEditor.API.dll` in the **dependencies** directory:
@@ -32,11 +34,22 @@ Aegis Editor is a schematic and prefab editor for SCP: Secret Laboratory servers
     - Windows: `%appdata%/SCP Secret Laboratory/LabAPI/plugins/<port>/`
 4. Restart the server.
 
-## Contributing
+## Unity Editor
+
+1. Create a HDRP project using Unity 2021.3.17f1 or later
+  - You can also try importing the package into an existing project
+2. Download a package from the [releases page](https://github.com/NotZer0Two/AegisEditor/releases).
+   - `it.pyyra.aegiseditor` contains SL assets
+   - `it.pyyra.aegiseditor.core` has assemblies only, no game prefabs
+3. Go to `Assets > Import Package > Custom Package` in the top menu bar
+4. Select the package you downloaded
+5. Click `Import` and wait
+
+# Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md), and join the [Discord](https://discord.gg/eeNZZfhWtE) if you want to discuss an idea first.
 
-## Security
+# Security
 
 See [SECURITY.md](./SECURITY.md).
 

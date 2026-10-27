@@ -1,18 +1,16 @@
 name: PR Build
 
 on:
+  workflow_dispatch:
+  workflow_call:
   pull_request:
-    branches: [dev]
+    branches: [ dev ]
 
 env:
-  NET_FRAMEWORK_VERSION: "net48"
-  PROJECT_NAME: "/AegisEditor"
-  API_PROJECT_NAME: "/AegisEditor.API"
-  EDITOR_PROJECT_NAME: "/AegisEditor.Editor"
-  PACKAGE_NAME: "it.pyyra.aegiseditor"
-  SL_REFERENCES: "${{ github.workspace }}/References"
-  UNITY_REFERENCES: "${{ github.workspace }}/References"
-  gameAssemblyReferences: "mscorlib.dll,System.dll,System.Core.dll,System.Data.dll,System.Data.DataSetExtensions.dll,System.Net.Http.dll,System.Xml.dll,System.Xml.Linq.dll,Pooling.dll,UnityEngine.dll,UnityEngine.CoreModule.dll,UnityEngine.PhysicsModule.dll,UnityEngine.AssetBundleModule.dll,UnityEngine.AnimationModule.dll,Unity.TextMeshPro.dll,UnityEngine.UI.dll,UnityEngine.IMGUIModule.dll,Assembly-CSharp-firstpass.dll,Assembly-CSharp.dll,LabApi.dll,NorthwoodLib.dll,CommandSystem.Core.dll,Mirror.dll,YamlDotNet.dll"
+  OUT: ${{ github.workspace }}/OUT
+  PACKAGE: it.pyyra.aegiseditor
+  PACKAGE_CORE: it.pyyra.aegiseditor.core
+  UNITY: 2021.3.17f1
 
 jobs:
   build:
@@ -23,62 +21,73 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Debug, Release]
+        configuration: [ Debug, Release ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-dotnet@v4
+      - name: Download SCP:SL references
+        uses: Axwabo/scpsl-references-downloader@v1
+
+      - name: Get Unity Editor DLL from cache
+        id: download-unity-editor-dll
+        uses: actions/cache@v6.1.0
         with:
-          dotnet-version: 9.0.x
+          key: UnityEditor-${{ env.UNITY }}
+          path: ${{ env.ReferencePath }}/UnityEditor.CoreModule.dll # TODO: update path later
 
-      - name: Download SCP SL References
-        uses: killers0992/scpsl.downloadfiles@master
+      - name: Setup Unity
+        id: unity-setup
+        uses: buildalon/unity-setup@v2.6.0
+        if: steps.download-unity-editor-dll.outputs.cache-hit == ''
         with:
-          branch: 'public'
-          filesToDownload: ${{ env.gameAssemblyReferences }}
+          version-file: None
+          unity-version: ${{ env.UNITY }}
+          hub-version: 3.14.3 # disables auto-update; keeps /opt/unityhub
 
-      - name: Add NuGet feed auth
-        run: dotnet nuget update source github --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+      - name: Copy Editor DLL
+        if: steps.unity-setup.outputs.unity-editor-path != ''
+        run: |
+          UNITY_DIR=$(dirname "${{ steps.unity-setup.outputs.unity-editor-path }}")
+          cp "$UNITY_DIR/Data/Managed/UnityEngine/UnityEditor.CoreModule.dll" "${{ env.ReferencePath }}/"
 
-      - name: Build API
-        run: dotnet build ${{ github.workspace }}${{ env.API_PROJECT_NAME }}/AegisEditor.API.csproj --configuration ${{ matrix.configuration }}
-
-      - name: Build Plugin
-        run: dotnet build ${{ github.workspace }}${{ env.PROJECT_NAME }}/AegisEditor.csproj --configuration ${{ matrix.configuration }}
-
-      - name: Build Editor
-        run: dotnet build ${{ github.workspace }}${{ env.EDITOR_PROJECT_NAME }}/AegisEditor.Editor.csproj --configuration ${{ matrix.configuration }}
+      - name: Build
+        run: dotnet build -c ${{ matrix.configuration }} -o ${{ env.OUT }}
 
       - name: Prepare Unity package
         if: matrix.configuration == 'Release'
         run: |
-          cd ${{ github.workspace }}
-          find Packages -name \*.meta >> metaList
-          cp ${{ github.workspace }}${{ env.API_PROJECT_NAME }}/bin/Release/${{ env.NET_FRAMEWORK_VERSION }}/AegisEditor.API.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE_NAME }}/Runtime/AegisEditor.API.dll
-          cp ${{ github.workspace }}${{ env.EDITOR_PROJECT_NAME }}/bin/Release/${{ env.NET_FRAMEWORK_VERSION }}/AegisEditor.Editor.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE_NAME }}/Editor/AegisEditor.Editor.dll
-          mkdir PackageOutput
+          find Packages -name \*.meta >> FullMetaList
+          find Packages -name \*.dll.meta >> CoreMetaList
+          cp ${{ env.OUT }}/AegisEditor.API.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Runtime/
+          cp ${{ env.OUT }}/AegisEditor.Editor.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Editor/
 
-      - name: Create Unity package
+      - name: Upload plugins
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: plugins-${{ matrix.configuration }}
+          retention-days: 7
+          path: |
+            ${{ env.OUT }}/AegisEditor.dll
+            ${{ env.OUT }}/AegisEditor.API.dll
+
+      - name: Create Full Unity package
         if: matrix.configuration == 'Release'
         uses: pCYSl5EDgo/create-unitypackage@master
         with:
-          package-path: ${{ github.workspace }}/PackageOutput/${{ env.PACKAGE_NAME }}.unitypackage
-          include-files: metaList
+          package-path: ${{ env.OUT }}/${{ env.PACKAGE }}.unitypackage
+          include-files: FullMetaList
 
-      - name: Upload plugin
-        if: matrix.configuration == 'Debug'
-        uses: actions/upload-artifact@v4
+      - name: Create Core Unity package
+        if: matrix.configuration == 'Release'
+        uses: pCYSl5EDgo/create-unitypackage@master
         with:
-          name: AegisEditor-pr-${{ github.event.pull_request.number }}-plugin
-          retention-days: 7
-          path: |
-            ${{ github.workspace }}${{ env.PROJECT_NAME }}/bin/Debug/${{ env.NET_FRAMEWORK_VERSION }}/AegisEditor.dll
-            ${{ github.workspace }}${{ env.API_PROJECT_NAME }}/bin/Debug/${{ env.NET_FRAMEWORK_VERSION }}/AegisEditor.API.dll
+          package-path: ${{ env.OUT }}/${{ env.PACKAGE_CORE }}.unitypackage
+          include-files: CoreMetaList
 
-      - name: Upload Unity package
+      - name: Upload Unity packages
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: AegisEditor-pr-${{ github.event.pull_request.number }}-unitypackage
+          name: unitypackages
           retention-days: 7
-          path: ${{ github.workspace }}/PackageOutput/${{ env.PACKAGE_NAME }}.unitypackage
+          path: ${{ env.OUT }}/*.unitypackage

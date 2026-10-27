@@ -1,4 +1,9 @@
+using System.Collections.Generic;
 using System.ComponentModel;
+using AegisEditor.API.Enum;
+using AegisEditor.API.Enum.Map;
+using AegisEditor.API.Struct;
+using UnityEngine;
 
 namespace AegisEditor;
 
@@ -12,6 +17,12 @@ public class AegisConfig
     /// </summary>
     [Description("Spawns the schematic automatically when joining")]
     public bool AutoSpawn { get; set; } = true;
+    
+    /// <summary>
+    /// Auto spawns the schematics for the player.
+    /// </summary>
+    [Description("Schematics will automatically be update when deleted / updated in the file system")]
+    public bool DynamicUpdate { get; set; } = true;
     
     /// <summary>
     /// Seconds between update ticks.
@@ -48,4 +59,37 @@ public class AegisConfig
     /// </summary>
     [Description("Fixes Server side waypoints (ex Doors and Waypoints) by forcing them to spawn always in the client fixing some issues with desync (put true if you dont know what you are doing)")]
     public bool FixServerSideWaypoints { get; set; } = true;
+
+    [Description("Prefabs spawned automatically when the map generates")]
+    public List<AutoSpawnEntry> AutoSpawns { get; set; } = new()
+    {
+        new AutoSpawnEntry() 
+        {
+            Bundle = "spawn",
+            Prefab = "spawn",
+        }
+    };
+    
+    /// <summary>
+    /// Spawn pose overrides by prefab name.
+    /// </summary>
+    [Description("Overrides the spawn location of a prefab by its name, takes priority over the bundle's spawn location")]
+    public Dictionary<string, SpawnOverride> SpawnOverrides { get; set; } = new()
+    {
+        ["ExampleFixed"] = new SpawnOverride
+        {
+            Type = SpawnLocationType.Fixed,
+            Position = new Vector3(0f, 1000f, 0f),
+            Rotation = new Vector3(0f, 90f, 0f),
+            Scale = new Vector3(1f, 1f, 1f),
+        },
+        ["ExampleRoom"] = new SpawnOverride
+        {
+            Type = SpawnLocationType.Room,
+            Room = RoomType.Unknown,
+            Position = new Vector3(0f, 1f, 2f),
+            Rotation = new Vector3(0f, 0f, 0f),
+            Scale = new Vector3(1f, 1f, 1f),
+        },
+    };
 }

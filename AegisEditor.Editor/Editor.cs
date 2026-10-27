@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AegisEditor.API.Features.Editor;
+using AegisEditor.API.Features.ScriptableObjects;
 using AegisEditor.API.Features.Spawnable;
 using UnityEditor;
 using UnityEngine;
@@ -27,6 +28,9 @@ public class Editor
         typeof(Animator),
         typeof(AegisPrefab),
         typeof(AegisSpawnable),
+        typeof(AegisAction),
+        typeof(SchematicSpawnpoint),
+        typeof(AegisSpawningLocation),
     };
 
     /// <summary>

@@ -28,6 +28,7 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     /// <summary>
     /// The color of the primitive.
     /// </summary>
+    [ColorUsage(true, true)]
     public Color Color = Color.white;
 
     /// <summary>
@@ -122,7 +123,10 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
 
         if (Color != _lastColor)
         {
-            value.Add((PropertyUpdate.PrimitiveColor, Color));
+            if (Color.r <= 1 && Color.g <= 1 && Color.b <= 1)
+                value.Add((PropertyUpdate.PrimitiveColor, Color));
+            else
+                value.Add((PropertyUpdate.PrimitiveColor, new Color(Color.r * 255f, Color.g * 255f, Color.b * 255f, Color.a)));
             _lastColor = Color;
             changed = true;
         }

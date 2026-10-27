@@ -1,5 +1,7 @@
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using Mirror;
 using UnityEngine;
@@ -13,6 +15,8 @@ namespace AegisEditor.API.Features.ServerObject;
 public class ServerItemSpawner : NetworkedObject
 {
     private readonly Pickup? _pickup;
+    private readonly AegisItemSpawner Source;
+    private bool alreadyPickedup;
 
     /// <summary>
     /// Creates the hidden pickup on the server.
@@ -20,6 +24,7 @@ public class ServerItemSpawner : NetworkedObject
     /// <param name="source">The item spawner it represents.</param>
     public ServerItemSpawner(AegisItemSpawner source)
     {
+        Source = source;
         _pickup = Pickup.Create(source.Item.ToItemType(), source.Position, Quaternion.Euler(source.Rotation), source.Scale, false);
 
         if (_pickup is null)
@@ -29,6 +34,9 @@ public class ServerItemSpawner : NetworkedObject
         }
 
         _pickup.Transform.SetParent(source.transform, true);
+
+        PlayerEvents.SearchedPickup += OnPickedUpItem;
+        
         NetId = _pickup.NetworkIdentity.netId;
         ClientSideRegistry.TrackedIds.Add(NetId);
     }
@@ -60,4 +68,20 @@ public class ServerItemSpawner : NetworkedObject
         ClientSideRegistry.TrackedIds.Remove(NetId);
         _pickup?.Destroy();
     } 
+    
+    private void OnPickedUpItem(PlayerSearchedPickupEventArgs ev)
+    {
+        if (alreadyPickedup)
+            return;
+
+        if (_pickup != ev.Pickup)
+            return;
+        
+        foreach (AegisAction action in Source.onPickedUp)
+        {
+            if (action != null)
+                action.Execute(ev.Player.GameObject);
+        }
+        alreadyPickedup = true;
+    }
 }
