@@ -3,6 +3,8 @@ using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces.Network;
 using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using Mirror;
 using UnityEngine;
@@ -16,6 +18,8 @@ namespace AegisEditor.API.Features.ServerObject;
 public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
 {
     private readonly BasicDoor? door;
+    private readonly AegisDoor Source;
+    private bool lastState;
 
     /// <summary>
     /// Creates the hidden door on the server.
@@ -23,6 +27,7 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
     /// <param name="source">The door spawnable it represents.</param>
     public ServerDoorSpawner(AegisDoor source)
     {
+        Source = source;
         door = UnityEngine.Object.Instantiate(PrefabCache.Get<BasicDoor>(source.doorType.GetName()));
 
         Transform t = door.transform;
@@ -39,6 +44,8 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
 
         NetworkServer.Spawn(door.gameObject);
 
+        PlayerEvents.InteractedDoor += OnInteractedDoor;
+        
         NetId = door.netId;
         ClientSideRegistry.TrackedIds.Add(NetId);
     }
@@ -71,5 +78,18 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
 
         if (door != null)
             Object.Destroy(door.gameObject);
+    }
+    
+    private void OnInteractedDoor(PlayerInteractedDoorEventArgs ev)
+    {
+        if (ev.Door.Base != door)
+            return;
+
+        bool state = door.NetworkTargetState;
+        if (state == lastState)
+            return;
+
+        lastState = state;
+        Source.InvokeActions(state, ev.Player.GameObject);
     }
 }

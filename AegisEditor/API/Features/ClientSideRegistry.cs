@@ -49,6 +49,7 @@ public static class ClientSideRegistry
         [typeof(AegisWaypoint)] = s => new ServerWaypointSpawner((AegisWaypoint)s),
         [typeof(AegisCamera)] = s => new ServerCameraSpawner((AegisCamera)s),
         [typeof(AegisLocker)] = s => new ServerLockerSpawner((AegisLocker)s),
+        [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
     };
 
     /// <summary>

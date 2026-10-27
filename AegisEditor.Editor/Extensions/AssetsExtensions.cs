@@ -267,6 +267,35 @@ public static class AssetsExtensions
     }
     
     /// <summary>
+    /// Adds a door to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="asset">asset.</param>
+    /// <returns>The newly created capybara.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddAsset(Selection.activeTransform, SpawnableAssetType.Workstation);</example>
+    public static AegisAssets AddInteractable(this AegisPrefab bundle, Transform parent, SpawnableAssetType asset = SpawnableAssetType.Workstation)
+    {
+        GameObject go = new GameObject($"{asset}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisAssets itemspawner = go.AddComponent<AegisAssets>();
+        itemspawner.Assets = asset;
+
+        itemspawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(itemspawner.gameObject, $"Created Asset");
+        Selection.activeGameObject = itemspawner.gameObject;
+
+        return itemspawner;
+    }
+    
+    /// <summary>
     /// Adds a camera to the bundle.
     /// </summary>
     /// <param name="bundle">The bundle to target.</param>

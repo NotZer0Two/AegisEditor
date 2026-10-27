@@ -18,5 +18,6 @@ public enum SpawnableType : byte
     Door,
     Waypoint,
     Camera,
-    Locker
+    Locker,
+    Interactable,
 }
