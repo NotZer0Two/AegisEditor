@@ -89,7 +89,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
-        AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner());
+        AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         
@@ -111,6 +111,11 @@ public class AegisPlugin : Plugin<AegisConfig>
             PlayerEvents.Joined += ev => Updater.SpawnAllFor(ev.Player);
         
         PlayerEvents.Left += ev => Updater.DestroyAllFor(ev.Player);
+
+        if (Config.DynamicUpdate)
+        {
+            StaticUnityMethods.OnUpdate += AegisAPI.CheckForFileChanges;
+        }
     }
 
     /// <inheritdoc/>

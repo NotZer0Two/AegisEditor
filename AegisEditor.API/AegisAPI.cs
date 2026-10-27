@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AegisEditor.API.Enum;
+using AegisEditor.API.Enum.File;
 using AegisEditor.API.Features;
 using AegisEditor.API.Features.ServerSided;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Struct;
 using UnityEngine;
 
 namespace AegisEditor;
@@ -15,6 +18,9 @@ namespace AegisEditor;
 /// </summary>
 public class AegisAPI
 {
+    static FileSystemWatcher _fileWatcher;
+    static ConcurrentQueue<FileUpdate> _fileActions = new ConcurrentQueue<FileUpdate>();
+    
     /// <summary>
     /// Gets invoked when a spawnable request an update
     /// </summary>
@@ -60,7 +66,7 @@ public class AegisAPI
     /// Initializes API.
     /// </summary>
     /// <param name="pluginDirectory">The plugin directory.</param>
-    public static void Initialize(string pluginDirectory, ObjectSpawner server)
+    public static void Initialize(string pluginDirectory, ObjectSpawner server, bool shouldDetect)
     {
         if (IsInitialized)
             return;
@@ -75,6 +81,15 @@ public class AegisAPI
         if (!Directory.Exists(BundlesDirectory))
             Directory.CreateDirectory(BundlesDirectory);
 
+        if (shouldDetect)
+        {
+            _fileWatcher = new FileSystemWatcher(BundlesDirectory);
+            _fileWatcher.EnableRaisingEvents = true;
+
+            _fileWatcher.Deleted += (s, ev) => _fileActions.Enqueue(new FileUpdate(ev.FullPath, ev.Name, FileChanges.Removed));;
+            _fileWatcher.Changed += (s, ev) => _fileActions.Enqueue(new FileUpdate(ev.FullPath, ev.Name, FileChanges.Updated));;
+        }
+        
         ServerSpawner = server;
         IsInitialized = true;
     }
@@ -169,5 +184,35 @@ public class AegisAPI
     {
         string targetPath = Path.Combine(BundlesDirectory, bundleName);
         return File.Exists(targetPath);
+    }
+    
+    /// <summary>
+    /// Dynamic system for making schematics automatically update.
+    /// </summary>
+    /// <summary>
+    /// Dynamic system for making schematics automatically update.
+    /// </summary>
+    public static void CheckForFileChanges()
+    {
+        int count = _fileActions.Count;
+
+        for (var i = 0; i < count && _fileActions.TryDequeue(out var action); i++)
+        {
+            if (!TryGetBundle(action.Name, out BundleInfo info))
+                continue;
+
+            switch (action.Change)
+            {
+                case FileChanges.Removed:
+                    info.Unload();
+                    break;
+                case FileChanges.Updated:
+                    if (!info.Reload())
+                        _fileActions.Enqueue(action);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 }
