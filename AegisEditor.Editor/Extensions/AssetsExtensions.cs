@@ -294,4 +294,33 @@ public static class AssetsExtensions
 
         return itemspawner;
     }
+    
+    /// <summary>
+    /// Adds a locker to the bundle.
+    /// </summary>
+    /// <param name="bundle">The bundle to target.</param>
+    /// <param name="parent">Parent to target.</param>
+    /// <param name="locker">The locker type.</param>
+    /// <returns>The newly created locker.</returns>
+    /// <example>BundleExtensions.GetBundle()?.AddLocker(Selection.activeTransform, SpawnableLockerType.RifleRack);</example>
+    public static AegisLocker AddLocker(this AegisPrefab bundle, Transform parent, SpawnableLockerType locker = SpawnableLockerType.LargeGunLocker)
+    {
+        GameObject go = new GameObject($"{locker}")
+        {
+            transform =
+            {
+                parent = parent
+            }
+        };
+
+        AegisLocker lockerSpawner = go.AddComponent<AegisLocker>();
+        lockerSpawner.lockerType = locker;
+
+        lockerSpawner.InitializeInEditor();
+
+        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Locker");
+        Selection.activeGameObject = lockerSpawner.gameObject;
+
+        return lockerSpawner;
+    }
 }

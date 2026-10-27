@@ -35,6 +35,7 @@ public static class ClientSideRegistry
     /// </summary>
     private static readonly Dictionary<Type, Func<AegisSpawnable, NetworkedObject>> Factories = new()
     {
+        // Client Sided
         [typeof(AegisPrimitive)] = s => new ClientSidePrimitive(((AegisPrimitive)s)),
         [typeof(AegisCullingParent)] = s => new ClientSideCullingParent(((AegisCullingParent)s)),
         [typeof(AegisLight)] = s => new ClientSideLight(((AegisLight)s)),
@@ -47,6 +48,7 @@ public static class ClientSideRegistry
         [typeof(AegisDoor)] = s => new ServerDoorSpawner((AegisDoor)s),
         [typeof(AegisWaypoint)] = s => new ServerWaypointSpawner((AegisWaypoint)s),
         [typeof(AegisCamera)] = s => new ServerCameraSpawner((AegisCamera)s),
+        [typeof(AegisLocker)] = s => new ServerLockerSpawner((AegisLocker)s),
     };
 
     /// <summary>
