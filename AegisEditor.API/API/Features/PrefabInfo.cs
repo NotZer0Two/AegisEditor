@@ -77,7 +77,7 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
     /// Spawns the prefab.
     /// </summary>
     /// <returns>if prefab was spawned</returns>
-    public bool Spawn(Vector3 position, Vector3 rotation, Vector3 scale, GameObject prefabInstance = null)
+    public bool Spawn(Vector3 position, Vector3 rotation, Vector3 scale, GameObject prefabInstance = null, bool defaultPosition = true)
     {
         try
         {
@@ -101,7 +101,8 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
 
             Spawnables = Object.GetComponentsInChildren<AegisSpawnable>();
             
-            AegisAPI.ServerSpawner.OnRequestPosition(this, Object.GetComponent<AegisSpawningLocation>());
+            if(defaultPosition)
+                AegisAPI.ServerSpawner.OnRequestPosition(this, Object.GetComponent<AegisSpawningLocation>());
             
             foreach (AegisSpawnable spawnable in Spawnables)
             {
