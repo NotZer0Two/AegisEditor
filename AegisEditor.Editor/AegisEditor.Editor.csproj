@@ -22,7 +22,7 @@
 
 
     <ItemGroup>
-        <Reference Include="UnityEditor" Private="false" />
+        <Reference Include="UnityEditor.CoreModule" Private="false" />
         <Reference Include="UnityEngine" Private="false" />
         <Reference Include="UnityEngine.CoreModule" Publicize="true" Private="false" />
         <Reference Include="UnityEngine.PhysicsModule" Private="false" />

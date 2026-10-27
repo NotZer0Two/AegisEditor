@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v6.1.0
         with:
           key: UnityEditor-${{ env.UNITY }}
-          path: ${{ env.ReferencePath }}/UnityEditor.dll # TODO: update path later
+          path: ${{ env.ReferencePath }}/UnityEditor.CoreModule.dll # TODO: update path later
 
       - name: Setup Unity
         id: unity-setup
@@ -47,7 +47,7 @@ jobs:
         if: steps.unity-setup.outputs.unity-editor-path != ''
         run: |
           UNITY_DIR=$(dirname "${{ steps.unity-setup.outputs.unity-editor-path }}")
-          cp "$UNITY_DIR/Data/Managed/UnityEngine/UnityEditor.dll" "${{ env.ReferencePath }}/"
+          cp "$UNITY_DIR/Data/Managed/UnityEngine/UnityEditor.CoreModule.dll" "${{ env.ReferencePath }}/"
 
       - name: Build
         run: dotnet build -c ${{ matrix.configuration }} -o ${{ env.OUT }}
