@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
@@ -163,6 +164,20 @@ public class PlayerObjectUpdater : ObjectUpdater
         if (spawnable.SpawnedBy == null || !_receivers.TryGetValue(spawnable.SpawnedBy, out List<Player> players))
             return;
 
+        bool parentChanged = false;
+        uint parentId = 0;
+
+        for (int i = 0; i < changes.Count; i++)
+        {
+            if (changes[i].propertyName != PropertyUpdate.Parent)
+                continue;
+
+            parentChanged = true;
+            parentId = (uint)changes[i].value;
+            break;
+        }
+
+        Type type = spawnable.Type.ToType();
         Vector3 position = spawnable.Position;
         bool billboard = spawnable is AegisText { billboard: true };
         Transform parent = AegisAPI.UseGameParenting ? spawnable.ClientSpaceParent : spawnable.transform.parent;
@@ -171,9 +186,17 @@ public class PlayerObjectUpdater : ObjectUpdater
         {
             Player player = players[i];
 
-            if ((player.Position - position).sqrMagnitude >= DistanceCullingSqr
-                || !ClientSideRegistry.IsReady(spawnable.SpawnedBy, player))
+            if (!ClientSideRegistry.IsReady(spawnable.SpawnedBy, player))
                 continue;
+
+            if (!parentChanged && (player.Position - position).sqrMagnitude >= DistanceCullingSqr)
+                continue;
+
+            if (parentChanged)
+            {
+                player.SendFakeSyncVar(networked.NetID, type, "NetworkIsStatic", false);
+                player.SendChangeParent(networked.NetID, parentId);
+            }
 
             List<(PropertyUpdate propertyName, object value)> send = changes;
 
@@ -187,6 +210,9 @@ public class PlayerObjectUpdater : ObjectUpdater
 
                 if (!_lastYaw.TryGetValue(player, out Dictionary<AegisSpawnable, float> yaws))
                     _lastYaw[player] = yaws = new Dictionary<AegisSpawnable, float>();
+
+                if (parentChanged)
+                    yaws.Remove(spawnable);
 
                 if (!yaws.TryGetValue(spawnable, out float last)
                     || Mathf.Abs(Mathf.DeltaAngle(last, yaw)) >= BillboardThreshold)
@@ -204,7 +230,7 @@ public class PlayerObjectUpdater : ObjectUpdater
                 send = Buffer;
             }
 
-            player.SendFakeSyncVar(networked.NetID, spawnable.Type.ToType(), send);
+            player.SendFakeSyncVar(networked.NetID, type, send);
         }
     }
 }

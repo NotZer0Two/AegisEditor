@@ -96,6 +96,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         
         AegisAPI.UseGameParenting = Config.UseGameParenting;
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
+        AegisAPI.GetExternalNetId = t => t.TryGetComponent(out NetworkIdentity identity) ? identity.netId : 0u;
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         

@@ -12,6 +12,7 @@ public enum PropertyUpdate
     Position,
     Scale,
     Rotation,
+    Parent,
     
     // Primitive
     PrimitiveColor,

@@ -104,6 +104,9 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
 
             Spawnables = Object.GetComponentsInChildren<AegisSpawnable>();
             
+            foreach (AegisSpawnable spawnable in Spawnables)
+                spawnable.RefreshClientParent();
+            
             if(defaultPosition)
                 AegisAPI.ServerSpawner.OnRequestPosition(this, Object.GetComponent<AegisSpawningLocation>());
             
@@ -139,34 +142,66 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
         }
     }
     
-    /// <summary>
-    /// Adds invisible primitives to the empty objects between spawnables so they can be parented on the client.
-    /// Does nothing if <see cref="AegisAPI.UseGameParenting"/> is disabled.
-    /// </summary>
-    /// <param name="root">Root of the hierarchy, it never gets a primitive.</param>
-    public static void PrepareHierarchy(Transform root)
+/// <summary>
+/// Adds invisible primitives to the empty objects between spawnables, including the root, so everything can be parented on the client.
+/// Does nothing if <see cref="AegisAPI.UseGameParenting"/> is disabled.
+/// </summary>
+/// <param name="root">Root of the hierarchy.</param>
+public static void PrepareHierarchy(Transform root)
+{
+    if (!AegisAPI.UseGameParenting)
+        return;
+
+    foreach (AegisSpawnable spawnable in root.GetComponentsInChildren<AegisSpawnable>())
     {
-        if (!AegisAPI.UseGameParenting)
-            return;
+        if (spawnable is not INetworked || spawnable is INotAToyButAToy || spawnable.transform == root)
+            continue;
 
-        foreach (AegisSpawnable spawnable in root.GetComponentsInChildren<AegisSpawnable>())
+        Transform current = spawnable.transform.parent;
+        while (current != null && !current.TryGetComponent(out AegisSpawnable _))
         {
-            if (spawnable is not INetworked || spawnable is INotAToyButAToy)
-                continue;
+            AegisPrimitive empty = current.gameObject.AddComponent<AegisPrimitive>();
+            empty.IsParentOnly = true;
+            empty.PrimitiveType = SpawnablePrimitive.Cube;
+            empty.IsVisible = false;
+            empty.IsCollidable = false;
 
-            Transform current = spawnable.transform.parent;
-            while (current != null && current != root && !current.TryGetComponent(out AegisSpawnable _))
-            {
-                AegisPrimitive empty = current.gameObject.AddComponent<AegisPrimitive>();
-                empty.IsParentOnly = true;
-                empty.PrimitiveType = SpawnablePrimitive.Cube;
-                empty.IsVisible = false;
-                empty.IsCollidable = false;
+            if (current == root)
+                break;
 
-                current = current.parent;
-            }
+            current = current.parent;
         }
     }
+}
+
+/// <summary>
+/// Attaches the spawned prefab to a transform, like a pickup or any game object with a network identity, so it follows it on the client.
+/// </summary>
+/// <param name="parent">Transform to attach to, null to detach.</param>
+/// <param name="localPosition">Position relative to the parent, or world position when detaching.</param>
+/// <param name="localRotation">Rotation relative to the parent, or world rotation when detaching.</param>
+/// <returns>If the prefab was attached.</returns>
+public bool AttachTo(Transform parent, Vector3 localPosition, Vector3 localRotation)
+{
+    if (!IsSpawned)
+        return false;
+
+    Quaternion rotation = Quaternion.Euler(localRotation);
+
+    if (parent != null)
+    {
+        localPosition = parent.TransformPoint(localPosition);
+        rotation = parent.rotation * rotation;
+    }
+
+    Object.transform.SetPositionAndRotation(localPosition, rotation);
+    Object.transform.SetParent(parent, true);
+
+    if (Object.TryGetComponent(out AegisSpawnable root))
+        root.NotifyClientParentChanged();
+
+    return true;
+}
     
     /// <summary>
     /// Spawns prefab with existing spawn location.
