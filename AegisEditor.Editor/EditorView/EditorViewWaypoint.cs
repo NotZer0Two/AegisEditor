@@ -21,13 +21,19 @@ public class EditorViewWaypoint : UnityEditor.Editor
         foreach (var o in targets)
         {
             var waypoint = (AegisWaypoint) o;
-            if (waypoint.gameObject.isStatic)
-                continue;
             var t = waypoint.transform;
-            if (t.lossyScale == Vector3.one && t.eulerAngles == Vector3.zero)
-                continue;
-            EditorGUILayout.HelpBox("Static waypoints aren't affected by scale or rotation.", MessageType.Info);
-            break;
+
+            if (t.lossyScale != Vector3.one)
+            {
+                EditorGUILayout.HelpBox("Scale doesn't affect waypoint bounds. Use Bounds Size.", MessageType.Info);
+                break;
+            }
+
+            if (waypoint.gameObject.isStatic && t.eulerAngles != Vector3.zero)
+            {
+                EditorGUILayout.HelpBox("Static waypoints ignore rotation and bounds size.", MessageType.Info);
+                break;
+            }
         }
     }
 }
