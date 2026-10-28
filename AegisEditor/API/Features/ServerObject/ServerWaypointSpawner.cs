@@ -22,19 +22,21 @@ public class ServerWaypointSpawner : NetworkedObject, IServerSidedWaypoint
     public ServerWaypointSpawner(AegisWaypoint source)
     {
         _waypoint = WaypointToy.Create(Vector3.zero, Quaternion.identity, Vector3.one, source.transform, false);
-        _waypoint.Base.NetworkPriority = source.waypointPriority;
-        _waypoint.Base.NetworkVisualizeBounds = source.visualizeBounds;
-        _waypoint.Base.NetworkMovementSmoothing = 30;
-        _waypoint.Base.NetworkIsStatic = !source.gameObject.isStatic;
-        _waypoint.Base.NetworkScale = source.Scale;
-        _waypoint.Base.NetworkPosition = source.Position;
-        _waypoint.Base.NetworkRotation = Quaternion.Euler(source.Rotation);
 
         if (_waypoint is null)
         {
             Logger.Error($"Waypoint failed to create for {source.SpawnedBy.PrefabName}. The game couldn't create it or a plugin is interfering.");
             return;
         }
+
+        _waypoint.Base.NetworkPriority = source.waypointPriority;
+        _waypoint.Base.NetworkVisualizeBounds = source.visualizeBounds;
+        _waypoint.Base.NetworkBoundsSize = source.boundsSize;
+        _waypoint.Base.NetworkMovementSmoothing = 30;
+        _waypoint.Base.NetworkIsStatic = source.gameObject.isStatic;
+        _waypoint.Base.NetworkScale = Vector3.one;
+        _waypoint.Base.NetworkPosition = source.Position;
+        _waypoint.Base.NetworkRotation = Quaternion.Euler(source.Rotation);
 
         _waypoint.Transform.SetParent(source.transform, true);
         NetId = _waypoint.Base.netId;

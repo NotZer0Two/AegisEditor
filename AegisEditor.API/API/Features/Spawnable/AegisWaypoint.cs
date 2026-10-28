@@ -1,23 +1,24 @@
-using System.Collections.Generic;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Interfaces;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace AegisEditor.API.Features.Spawnable;
 
 /// <summary>
 /// Waypoint.
 /// </summary>
-public class AegisWaypoint : AegisSpawnable
+public class AegisWaypoint : AegisSpawnable, IStaticIgnore
 {
-    private static readonly Vector3 Size = Vector3.one * 256;
-    
+    /// <summary>
+    /// Maximum size of each bounds axis.
+    /// </summary>
+    public const float MaxBounds = 255.9961f;
+
     /// <inheritdoc />
     public override SpawnableType Type => SpawnableType.Waypoint;
-    
+
     /// <summary>
-    /// priority of the waypoint.
+    /// Priority of the waypoint.
     /// </summary>
     [Tooltip("When two waypoints overlap, the one with higher priority will be used.")]
     public float waypointPriority;
@@ -27,14 +28,29 @@ public class AegisWaypoint : AegisSpawnable
     /// </summary>
     [Tooltip("Whether the bounds should be visible in-game. (this applies in game too)")]
     public bool visualizeBounds;
-    
-    /// <inheritdoc />
+
+    /// <summary>
+    /// Size of the waypoint bounds. Each axis is clamped to <see cref="MaxBounds"/>.
+    /// </summary>
+    [Tooltip("Size of the waypoint bounds. Max 255.9961 per axis.")]
+    public Vector3 boundsSize = Vector3.one * MaxBounds;
+
+    private void OnValidate()
+    {
+        boundsSize = Vector3.Min(boundsSize, Vector3.one * MaxBounds);
+        boundsSize = new Vector3(Mathf.Abs(boundsSize.x), Mathf.Abs(boundsSize.y), Mathf.Abs(boundsSize.z));
+    }
+
     private void OnDrawGizmos()
     {
-        if (visualizeBounds)
+        if (!visualizeBounds)
         {
-            Gizmos.matrix = !gameObject.isStatic ? Matrix4x4.Translate(transform.position) : transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(Vector3.zero, Size);
+            return;
         }
+
+        Gizmos.matrix = gameObject.isStatic
+            ? Matrix4x4.Translate(transform.position)
+            : Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, boundsSize);
     }
 }

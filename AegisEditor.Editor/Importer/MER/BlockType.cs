@@ -9,4 +9,9 @@ public enum BlockType
     Pickup = 3,
     Workstation = 4,
     Schematic = 5,
+    Teleport = 6,
+    Locker = 7,
+    Text = 8,
+    Interactable = 9,
+    Waypoint = 10,
 }

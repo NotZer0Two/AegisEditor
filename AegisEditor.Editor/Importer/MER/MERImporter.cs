@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AegisEditor.API.Enum;
+using AegisEditor.API.Features.Spawnable;
 using AegisEditor.Editor.API.Features;
 using AegisEditor.Editor.Extensions;
 using Newtonsoft.Json;
@@ -14,7 +15,7 @@ namespace AegisEditor.Editor.Importer.MER;
 /// <summary>
 /// Imports MER schematics.
 /// </summary>
-public sealed class SchematicImporter : Importer<SchematicObjectDataList>
+public sealed class MERImporter : Importer<SchematicObjectDataList>
 {
     private delegate Transform BlockHandler(SchematicBlockData block, Transform parent, ImportContext context);
 
@@ -23,7 +24,7 @@ public sealed class SchematicImporter : Importer<SchematicObjectDataList>
     /// <summary>
     /// Creates the importer.
     /// </summary>
-    public SchematicImporter()
+    public MERImporter()
     {
         _handlers = new Dictionary<BlockType, BlockHandler>
         {
@@ -32,6 +33,10 @@ public sealed class SchematicImporter : Importer<SchematicObjectDataList>
             [BlockType.Light] = CreateLight,
             [BlockType.Pickup] = CreatePickup,
             [BlockType.Workstation] = CreateWorkstation,
+            [BlockType.Locker] = CreateLocker,
+            [BlockType.Text] = CreateText,
+            [BlockType.Waypoint] = CreateWaypoint,
+            [BlockType.Interactable] = CreateInteractable,
         };
     }
 
@@ -151,6 +156,117 @@ public sealed class SchematicImporter : Importer<SchematicObjectDataList>
 
         context.TryAddAnimator(workstation.gameObject, block.AnimatorName);
         return workstation.transform;
+    }
+
+    private static Transform CreateLocker(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        SpawnableLockerType type = SpawnableLockerType.MiscLocker;
+
+        if (block.Properties != null && block.Properties.TryGetValue("LockerType", out object value) &&
+            Enum.TryParse(value.ToString(), out MERLockerType merType))
+        {
+            type = merType switch
+            {
+                MERLockerType.Pedestal => SpawnableLockerType.Scp500Pedestal,
+                MERLockerType.LargeGun => SpawnableLockerType.LargeGunLocker,
+                MERLockerType.RifleRack => SpawnableLockerType.RifleRack,
+                MERLockerType.Misc => SpawnableLockerType.MiscLocker,
+                MERLockerType.Medkit => SpawnableLockerType.RegularMedkit,
+                MERLockerType.Adrenaline => SpawnableLockerType.AdrenalineMedkit,
+                _ => SpawnableLockerType.MiscLocker,
+            };
+        }
+
+        var locker = context.Bundle.AddLocker(parent, type);
+        ImportContext.ApplyTransform(locker.transform, block.Position, block.Rotation, null);
+
+        context.TryAddAnimator(locker.gameObject, block.AnimatorName);
+        locker.OnUpdate();
+        return locker.transform;
+    }
+
+    private static Transform CreateText(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        var text = context.Bundle.AddText(parent);
+        ImportContext.ApplyTransform(text.transform, block.Position, block.Rotation, block.Scale);
+
+        if (block.Properties != null)
+        {
+            if (block.Properties.TryGetValue("Text", out object value))
+                text.text = value.ToString();
+
+            if (block.Properties.TryGetValue("DisplaySize", out object size) && TryParseFloats(size, 2, out float[] v))
+                text.displaySize = new Vector2(v[0], v[1]);
+        }
+
+        context.TryAddAnimator(text.gameObject, block.AnimatorName);
+        text.OnUpdate();
+        return text.transform;
+    }
+
+    private static Transform CreateWaypoint(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        var waypoint = context.Bundle.AddWaypoint(parent);
+        ImportContext.ApplyTransform(waypoint.transform, block.Position, block.Rotation, null);
+
+        if (block.Properties != null)
+        {
+            if (block.Properties.TryGetValue("Priority", out object priority) &&
+                float.TryParse(priority.ToString(), out float parsedPriority))
+                waypoint.waypointPriority = parsedPriority;
+
+            if (block.Properties.TryGetValue("VisualizeBounds", out object visualize) &&
+                bool.TryParse(visualize.ToString(), out bool parsedVisualize))
+                waypoint.visualizeBounds = parsedVisualize;
+
+            if (block.Properties.TryGetValue("BoundsSize", out object size) && TryParseFloats(size, 3, out float[] v))
+                waypoint.boundsSize = Vector3.Min(new Vector3(Mathf.Abs(v[0]), Mathf.Abs(v[1]), Mathf.Abs(v[2])),
+                    Vector3.one * AegisWaypoint.MaxBounds);
+        }
+
+        context.TryAddAnimator(waypoint.gameObject, block.AnimatorName);
+        return waypoint.transform;
+    }
+
+    private static Transform CreateInteractable(SchematicBlockData block, Transform parent, ImportContext context)
+    {
+        var interactable = context.Bundle.AddInteractable(parent, AegisInteractableShape.Box);
+        ImportContext.ApplyTransform(interactable.transform, block.Position, block.Rotation, block.Scale);
+
+        if (block.Properties != null)
+        {
+            if (block.Properties.TryGetValue("Shape", out object shape) &&
+                Enum.TryParse(shape.ToString(), out AegisInteractableShape parsedShape))
+                interactable.Shape = parsedShape;
+
+            if (block.Properties.TryGetValue("InteractionDuration", out object duration) &&
+                float.TryParse(duration.ToString(), out float parsedDuration))
+                interactable.InteractionDuration = Mathf.Max(0f, parsedDuration);
+
+            if (block.Properties.TryGetValue("IsLocked", out object locked) &&
+                bool.TryParse(locked.ToString(), out bool parsedLocked))
+                interactable.IsLocked = parsedLocked;
+        }
+
+        context.TryAddAnimator(interactable.gameObject, block.AnimatorName);
+        return interactable.transform;
+    }
+
+    private static bool TryParseFloats(object value, int count, out float[] result)
+    {
+        string[] parts = value.ToString().Split(new[] { ':', ',' }, StringSplitOptions.RemoveEmptyEntries);
+        result = new float[count];
+
+        if (parts.Length < count)
+            return false;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (!float.TryParse(parts[i], out result[i]))
+                return false;
+        }
+
+        return true;
     }
 
     private static Color GetColorFromString(string colorText)
