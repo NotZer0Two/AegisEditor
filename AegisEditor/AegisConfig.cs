@@ -60,6 +60,12 @@ public class AegisConfig
     [Description("Fixes Server side waypoints (ex Doors and Waypoints) by forcing them to spawn always in the client fixing some issues with desync (put true if you dont know what you are doing)")]
     public bool FixServerSideWaypoints { get; set; } = true;
 
+    /// <summary>
+    /// Parents client objects following the Unity hierarchy.
+    /// </summary>
+    [Description("Parents objects on the client following the Unity hierarchy like the game does with admin toys. Empty objects become invisible primitives and positions, rotations and scales are synced in local space, so moving a parent no longer sends updates for its children")]
+    public bool UseGameParenting { get; set; } = true;
+
     [Description("Prefabs spawned automatically when the map generates")]
     public List<AutoSpawnEntry> AutoSpawns { get; set; } = new()
     {

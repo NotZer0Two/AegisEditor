@@ -42,6 +42,12 @@ public class AegisAPI
     public static bool IsInitialized { get; private set; }
 
     /// <summary>
+    /// Parents objects on the client following the Unity hierarchy, like the game does with admin toys.
+    /// Empty objects become invisible primitives and transforms are synced in local space.
+    /// </summary>
+    public static bool UseGameParenting { get; set; } = true;
+
+    /// <summary>
     /// Returns path of plugin directory.
     /// </summary>
     public static string PluginDirectory { get; private set; }

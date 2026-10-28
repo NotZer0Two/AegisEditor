@@ -20,6 +20,9 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     private Vector3 _lastPosition;
     private Quaternion _lastRotation;
     private Vector3 _lastScale;
+
+    private AegisSpawnable _clientParent;
+    private bool _clientParentResolved;
     
     private List<(PropertyUpdate propertyName, object value)> _cachedUpdateList = new();
     
@@ -90,6 +93,72 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     }
     
     /// <summary>
+    /// Local position, what the client applies when <see cref="ClientParent"/> is set.
+    /// </summary>
+    public Vector3 LocalPosition
+    {
+        get => toUpdate.localPosition;
+        set => toUpdate.localPosition = value;
+    }
+
+    /// <summary>
+    /// Local rotation, what the client applies when <see cref="ClientParent"/> is set.
+    /// </summary>
+    public Vector3 LocalRotation
+    {
+        get => toUpdate.localEulerAngles;
+        set => toUpdate.localEulerAngles = value;
+    }
+
+    /// <summary>
+    /// Local scale, what the client applies when <see cref="ClientParent"/> is set.
+    /// </summary>
+    public Vector3 LocalScale
+    {
+        get => toUpdate.localScale;
+        set => toUpdate.localScale = new Vector3(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
+    }
+
+    /// <summary>
+    /// If other objects can be parented to this one on the client.
+    /// </summary>
+    public bool CanBeParent => this is INetworked;
+
+    /// <summary>
+    /// Direct parent this object is attached to on the client, null if it isn't parented or
+    /// <see cref="AegisAPI.UseGameParenting"/> is disabled.
+    /// </summary>
+    public AegisSpawnable ClientParent
+    {
+        get
+        {
+            if (!AegisAPI.UseGameParenting)
+                return null;
+
+            if (_clientParentResolved)
+                return _clientParent;
+
+            _clientParentResolved = true;
+
+            if (this is INotAToyButAToy)
+                return null;
+
+            Transform parent = transform.parent;
+            if (parent != null && parent.TryGetComponent(out AegisSpawnable spawnable) && spawnable.CanBeParent)
+                _clientParent = spawnable;
+
+            return _clientParent;
+        }
+    }
+
+    /// <summary>
+    /// Transform of <see cref="ClientParent"/> the client values are relative to.
+    /// Null if there is no parent or the parent sits at the origin on the client (culling parents),
+    /// in that case values are world space.
+    /// </summary>
+    public Transform ClientSpaceParent => ClientParent != null && ClientParent is not INotAToyButAToy ? ClientParent.transform : null;
+
+    /// <summary>
     /// Resolved culling parent of this object.
     /// </summary>
     public AegisCullingParent CullingParent
@@ -122,9 +191,7 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     
     private void Start() 
     {
-        _lastPosition = toUpdate.position;
-        _lastRotation = toUpdate.rotation;
-        _lastScale = toUpdate.lossyScale;
+        GetClientTransform(out _lastPosition, out _lastRotation, out _lastScale);
         
         OnStart();
         
@@ -177,21 +244,20 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     {
         int start = value.Count;
 
-        Vector3 currentPosition = toUpdate.position;
+        GetClientTransform(out Vector3 currentPosition, out Quaternion currentRotation, out Vector3 currentScale);
+
         if (currentPosition != _lastPosition)
         {
             value.Add((PropertyUpdate.Position, currentPosition));
             _lastPosition = currentPosition;
         }
 
-        Quaternion currentRotation = toUpdate.rotation;
         if (currentRotation != _lastRotation)
         {
             value.Add((PropertyUpdate.Rotation, currentRotation));
             _lastRotation = currentRotation;
         }
 
-        Vector3 currentScale = toUpdate.lossyScale;
         if (currentScale != _lastScale)
         {
             value.Add((PropertyUpdate.Scale, currentScale));
@@ -199,6 +265,28 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
         }
 
         return value.Count > start;
+    }
+    
+    /// <summary>
+    /// Reads the transform the way the client applies it: local to <see cref="ClientParent"/> when parented
+    /// (like the game does for admin toys), world space otherwise.
+    /// </summary>
+    /// <param name="position">Position to send.</param>
+    /// <param name="rotation">Rotation to send.</param>
+    /// <param name="scale">Scale to send.</param>
+    public void GetClientTransform(out Vector3 position, out Quaternion rotation, out Vector3 scale)
+    {
+        if (ClientSpaceParent != null)
+        {
+            position = toUpdate.localPosition;
+            rotation = toUpdate.localRotation;
+            scale = toUpdate.localScale;
+            return;
+        }
+
+        position = toUpdate.position;
+        rotation = toUpdate.rotation;
+        scale = toUpdate.lossyScale;
     }
     
     /// <summary>

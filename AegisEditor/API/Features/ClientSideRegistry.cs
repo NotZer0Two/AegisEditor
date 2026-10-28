@@ -173,7 +173,7 @@ public static class ClientSideRegistry
         if (list.Count == 0)
             return;
 
-        list.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+        list = list.OrderBy(o => o.Priority).ToList();
 
         Entry entry = new(list);
         Entries[prefab] = entry;

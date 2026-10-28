@@ -165,7 +165,7 @@ public class PlayerObjectUpdater : ObjectUpdater
 
         Vector3 position = spawnable.Position;
         bool billboard = spawnable is AegisText { billboard: true };
-        Transform parent = spawnable.transform.parent;
+        Transform parent = AegisAPI.UseGameParenting ? spawnable.ClientSpaceParent : spawnable.transform.parent;
 
         for (int i = 0; i < players.Count; i++)
         {

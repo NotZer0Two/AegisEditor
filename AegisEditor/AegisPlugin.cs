@@ -94,6 +94,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
+        AegisAPI.UseGameParenting = Config.UseGameParenting;
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
         ClientSideRegistry.Enable();
         Harmony.PatchAll();

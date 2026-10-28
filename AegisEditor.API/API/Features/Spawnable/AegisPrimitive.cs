@@ -17,6 +17,11 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     private bool _lastCollidable, _lastVisibility;
     private Collider _collider;
 
+    /// <summary>
+    /// If this primitive was generated to stand in for an empty object so it can be a parent on the client.
+    /// </summary>
+    internal bool IsParentOnly;
+
     /// <inheritdoc />
     public override SpawnableType Type => SpawnableType.Primitive;
 
@@ -190,11 +195,18 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     }
 
     [ExecuteInEditMode]
-    private void OnDestroy() => MaterialCache.StopUsingColor(this);
+    private void OnDestroy()
+    {
+        if (!IsParentOnly)
+            MaterialCache.StopUsingColor(this);
+    }
 
     /// <inheritdoc />
     public bool SpawnCollider(List<Collider> colliders)
     {
+        if (IsParentOnly)
+            return false;
+
         Mesh mesh = MaterialCache.GetMeshFromCache(PrimitiveType);
         GameObject colliderObject = new GameObject($"{name}-SyncCollision");
         colliderObject.transform.SetParent(transform, false);
@@ -212,7 +224,7 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     }
 
     /// <inheritdoc />
-    public bool ShouldSpawn() => !IsVisible && !IsCollidable;
+    public bool ShouldSpawn() => !IsParentOnly && !IsVisible && !IsCollidable;
 
     private void UpdateColliderLayer()
     {

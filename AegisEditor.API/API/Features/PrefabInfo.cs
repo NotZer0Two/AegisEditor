@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
@@ -99,6 +100,8 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
             Object.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Object.transform.localScale = Scale;
 
+            PrepareHierarchy(Object.transform);
+
             Spawnables = Object.GetComponentsInChildren<AegisSpawnable>();
             
             if(defaultPosition)
@@ -133,6 +136,35 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
         {
             Debug.LogException(e);
             return false;
+        }
+    }
+    
+    /// <summary>
+    /// Adds invisible primitives to the empty objects between spawnables so they can be parented on the client.
+    /// Does nothing if <see cref="AegisAPI.UseGameParenting"/> is disabled.
+    /// </summary>
+    /// <param name="root">Root of the hierarchy, it never gets a primitive.</param>
+    public static void PrepareHierarchy(Transform root)
+    {
+        if (!AegisAPI.UseGameParenting)
+            return;
+
+        foreach (AegisSpawnable spawnable in root.GetComponentsInChildren<AegisSpawnable>())
+        {
+            if (spawnable is not INetworked || spawnable is INotAToyButAToy)
+                continue;
+
+            Transform current = spawnable.transform.parent;
+            while (current != null && current != root && !current.TryGetComponent(out AegisSpawnable _))
+            {
+                AegisPrimitive empty = current.gameObject.AddComponent<AegisPrimitive>();
+                empty.IsParentOnly = true;
+                empty.PrimitiveType = SpawnablePrimitive.Cube;
+                empty.IsVisible = false;
+                empty.IsCollidable = false;
+
+                current = current.parent;
+            }
         }
     }
     

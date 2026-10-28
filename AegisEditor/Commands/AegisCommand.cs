@@ -38,6 +38,7 @@ public class AegisCommand : ParentCommand
         RegisterCommand(new ColliderBundleCommand());
         RegisterCommand(new UpdateTestCommand());
         RegisterCommand(new SpawnTestCommand());
+        RegisterCommand(new ParentTestCommand());
         #endif
     }
 
@@ -56,6 +57,7 @@ public class AegisCommand : ParentCommand
         
 #if DEBUG
         sb.AppendLine($" - aegiseditor spawntest (all) - Spawns the colliders and shows them as lines (DEBUG ONLY).");
+        sb.AppendLine($" - aegiseditor parenttest (spawn|move|child|compare|clear) - Spawns a parented hierarchy twice, with AegisEditor and with real game toys, and checks they match (DEBUG ONLY).");
         sb.AppendLine($" - aegiseditor colliderbundle (bundleName) (id) - Spawns the colliders and shows them as lines (DEBUG ONLY).");
         sb.AppendLine(" - aegiseditor update <netId> <property=value> [property=value] - Sends fake sync var changes for a network id, for you only. (DEBUG ONLY)");
         sb.AppendLine("     e.g. update 123 Position=0,10,0 Rotation=0,90,0 Scale=2,2,2");
