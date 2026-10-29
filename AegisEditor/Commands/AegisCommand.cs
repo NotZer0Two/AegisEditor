@@ -38,6 +38,10 @@ public class AegisCommand : ParentCommand
         RegisterCommand(new ColliderBundleCommand());
         RegisterCommand(new UpdateTestCommand());
         RegisterCommand(new SpawnTestCommand());
+        RegisterCommand(new ParentTestCommand());
+        RegisterCommand(new HierarchyCommand());
+        RegisterCommand(new ReparentTestCommand());
+        RegisterCommand(new AttachTestCommand());
         #endif
     }
 
@@ -56,7 +60,11 @@ public class AegisCommand : ParentCommand
         
 #if DEBUG
         sb.AppendLine($" - aegiseditor spawntest (all) - Spawns the colliders and shows them as lines (DEBUG ONLY).");
+        sb.AppendLine($" - aegiseditor parenttest (spawn|move|child|compare|clear) - Spawns a parented hierarchy twice, with AegisEditor and with real game toys, and checks they match (DEBUG ONLY).");
         sb.AppendLine($" - aegiseditor colliderbundle (bundleName) (id) - Spawns the colliders and shows them as lines (DEBUG ONLY).");
+        sb.AppendLine($" - aegiseditor hierarchy (id) (bundleName) - Shows the hierarchy of a spawned prefab and how each object is parented on the client.");
+        sb.AppendLine($" - aegiseditor reparenttest (childNetId) (parentNetId) - Parents a client object to a net id on your client only (DEBUG ONLY).");
+        sb.AppendLine($" - aegiseditor attachtest (id) (netId, 0 to detach) (bundleName) - Attaches a spawned prefab to a net id, 0 detaches it (DEBUG ONLY).");
         sb.AppendLine(" - aegiseditor update <netId> <property=value> [property=value] - Sends fake sync var changes for a network id, for you only. (DEBUG ONLY)");
         sb.AppendLine("     e.g. update 123 Position=0,10,0 Rotation=0,90,0 Scale=2,2,2");
         sb.AppendLine("     e.g. update 123 Intensity=5 Range=30 LightColor=red ShadowType=Soft");

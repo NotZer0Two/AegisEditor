@@ -23,8 +23,13 @@ public abstract class ClientSideObject : NetworkedObject
     /// <param name="source"></param>
     protected ClientSideObject(AegisSpawnable source)
     {
-        Transform t = source.transform;
         bool isStatic = source.gameObject.isStatic && source is not AegisText { billboard: true };
+
+        AegisSpawnable parent = source.ClientParent;
+        source.GetClientTransform(out Vector3 position, out Quaternion rotation, out Vector3 scale);
+        SentPosition = position;
+        SentRotation = rotation;
+        SentScale = scale;
 
         NetId = source is INetworked { NetID: not 0 } networked
             ? networked.NetID
@@ -42,9 +47,9 @@ public abstract class ClientSideObject : NetworkedObject
         
         if (source is not INotAToyButAToy)
         {
-            writer.WriteVector3(t.position);
-            writer.WriteQuaternion(t.rotation);
-            writer.WriteVector3(t.lossyScale);
+            writer.WriteVector3(position);
+            writer.WriteQuaternion(rotation);
+            writer.WriteVector3(scale);
             writer.WriteByte(30);
             writer.WriteBool(isStatic);   
         }
@@ -53,7 +58,13 @@ public abstract class ClientSideObject : NetworkedObject
 
         if (source is not INotAToyButAToy)
         {
-            uint parentId = source.CullingParent is { NetID: not 0 } parent ? parent.NetID : 0;
+            uint parentId;
+            if (AegisAPI.UseGameParenting)
+                parentId = GetParentNetId(parent);
+            else
+                parentId = source.CullingParent is { NetID: not 0 } culling ? culling.NetID : 0;
+
+            ParentNetId = parentId;
             writer.Write(parentId);   
         }
         
@@ -66,9 +77,9 @@ public abstract class ClientSideObject : NetworkedObject
         {
             netId = NetId,
             assetId = GetAssetId(PrefabName),
-            position = t.position,
-            rotation = t.rotation,
-            scale = t.lossyScale,
+            position = position,
+            rotation = rotation,
+            scale = scale,
             payload = writer.ToArraySegment().ToArray()
         };
     }
@@ -77,6 +88,31 @@ public abstract class ClientSideObject : NetworkedObject
     /// The net id.
     /// </summary>
     public sealed override uint NetId { get; set; }
+
+    /// <summary>
+    /// The spawn message sent to the players.
+    /// </summary>
+    internal SpawnMessage Message => _spawn;
+
+    /// <summary>
+    /// Net id of the parent written in the spawn message, 0 if none.
+    /// </summary>
+    public uint ParentNetId { get; }
+
+    /// <summary>
+    /// Position written in the spawn message, local to the parent when there is one.
+    /// </summary>
+    public Vector3 SentPosition { get; }
+
+    /// <summary>
+    /// Rotation written in the spawn message, local to the parent when there is one.
+    /// </summary>
+    public Quaternion SentRotation { get; }
+
+    /// <summary>
+    /// Scale written in the spawn message, local to the parent when there is one.
+    /// </summary>
+    public Vector3 SentScale { get; }
 
     /// <summary>
     /// Priority on spawn.
@@ -110,6 +146,17 @@ public abstract class ClientSideObject : NetworkedObject
     /// Destroys this object
     /// </summary>
     public override void Destroy(Player player) => player.Connection.Send(_destroy);
+
+    private static uint GetParentNetId(AegisSpawnable parent)
+    {
+        if (parent is not INetworked networked)
+            return 0;
+
+        if (networked.NetID == 0)
+            networked.NetID = NetworkIdentity.GetNextNetworkId();
+
+        return networked.NetID;
+    }
 
     private static uint GetAssetId(string name)
     {

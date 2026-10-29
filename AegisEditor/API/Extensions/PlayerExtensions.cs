@@ -17,6 +17,8 @@ namespace AegisEditor.API.Extensions;
 /// </summary>
 public static class PlayerExtensions
 {
+    private const int ChangeParentHash = -342419096;
+    
     private static readonly Dictionary<string, ulong> SyncVarDirtyBitsValue = new();
     private static readonly Dictionary<Type, MethodInfo> WriterExtensionsValue = new();
 
@@ -123,7 +125,13 @@ public static class PlayerExtensions
         Buffer.Clear();
 
         foreach ((PropertyUpdate property, object value) in values)
+        {
+            // Lets add it here too so in case some genius has the idea to push it to the client lol
+            if(property == PropertyUpdate.Parent)
+                continue;
+            
             Buffer.Add((property.ToSyncVarName(), value));
+        }
 
         target.SendFakeSyncVar(netId, targetType, Buffer);
         Buffer.Clear();
@@ -261,5 +269,22 @@ public static class PlayerExtensions
         }
 
         return false;
+    }
+    
+    /// <summary>
+    /// Tells the client to parent an admin toy to another networked object, same message as the game's RpcChangeParent.
+    /// </summary>
+    public static void SendChangeParent(this Player target, uint netId, uint parentId)
+    {
+        using NetworkWriterPooled writer = NetworkWriterPool.Get();
+        writer.WriteUInt(parentId);
+
+        target.Connection.Send(new RpcMessage
+        {
+            netId = netId,
+            componentIndex = 0,
+            functionHash = unchecked((ushort)ChangeParentHash),
+            payload = writer.ToArraySegment(),
+        });
     }
 }

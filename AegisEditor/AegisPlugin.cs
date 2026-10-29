@@ -94,7 +94,9 @@ public class AegisPlugin : Plugin<AegisConfig>
         Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
+        AegisAPI.UseGameParenting = Config.UseGameParenting;
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
+        AegisAPI.GetExternalNetId = t => t.TryGetComponent(out NetworkIdentity identity) ? identity.netId : 0u;
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         
