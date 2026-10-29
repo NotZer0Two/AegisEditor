@@ -25,6 +25,8 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     private Transform _clientTarget;
     private bool _clientParentResolved;
     private bool _clientDirty;
+    private float? _syncInterval;
+    internal float NextSyncTime;
     
     private List<(PropertyUpdate propertyName, object value)> _cachedUpdateList = new();
     
@@ -91,6 +93,22 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
             );
 
             toUpdate.localScale = local;
+        }
+    }
+    
+    /// <summary>
+    /// Interval in seconds between sync updates of this object, null uses <see cref="ObjectUpdater.Interval"/>. Can be changed at any moment.
+    /// </summary>
+    public float? SyncInterval
+    {
+        get => _syncInterval;
+        set
+        {
+            _syncInterval = value.HasValue ? Mathf.Max(0f, value.Value) : null;
+    
+            float next = Time.time + (_syncInterval ?? ObjectUpdater.Instance?.Interval ?? 0f);
+            if (NextSyncTime > next)
+                NextSyncTime = next;
         }
     }
     
