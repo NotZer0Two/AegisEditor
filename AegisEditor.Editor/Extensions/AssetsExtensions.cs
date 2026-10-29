@@ -392,7 +392,7 @@ public static class AssetsExtensions
     /// <example>BundleExtensions.GetBundle()?.AddTrigger(Selection.activeTransform);</example>
     public static AegisTrigger AddTrigger(this AegisPrefab bundle, Transform parent)
     {
-        GameObject go = new GameObject($"Trigger")
+        GameObject go = new GameObject("Trigger")
         {
             transform =
             {
@@ -400,11 +400,14 @@ public static class AssetsExtensions
             }
         };
 
-        AegisTrigger lockerSpawner = go.AddComponent<AegisTrigger>();
+        BoxCollider collider = go.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
 
-        Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Trigger");
-        Selection.activeGameObject = lockerSpawner.gameObject;
+        AegisTrigger trigger = go.AddComponent<AegisTrigger>();
 
-        return lockerSpawner;
+        Undo.RegisterCreatedObjectUndo(go, "Created Trigger");
+        Selection.activeGameObject = go;
+
+        return trigger;
     }
 }
