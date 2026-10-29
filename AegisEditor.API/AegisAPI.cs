@@ -32,6 +32,11 @@ public class AegisAPI
     public static Action<AegisSpawnable> SpawnableSpawned;
     
     /// <summary>
+    /// Called when a spawnable is destroyed.
+    /// </summary>
+    public static Action<AegisSpawnable> SpawnableDestroyed;
+    
+    /// <summary>
     /// Invoked when a Bundle is loaded.
     /// </summary>
     public static Action<BundleInfo> BundleLoaded;

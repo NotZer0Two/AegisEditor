@@ -59,6 +59,7 @@ public static class ClientSideRegistry
     internal static void Enable()
     {
         AegisAPI.BundleLoaded += Track;
+        AegisAPI.SpawnableDestroyed += OnSpawnableDestroyed;
 
         foreach (BundleInfo bundle in AegisAPI.LoadedBundles.Values)
             Track(bundle);
@@ -70,6 +71,7 @@ public static class ClientSideRegistry
     internal static void Disable()
     {
         AegisAPI.BundleLoaded -= Track;
+        AegisAPI.SpawnableDestroyed -= OnSpawnableDestroyed;
 
         foreach (BundleInfo bundle in Tracked)
         {
@@ -228,6 +230,33 @@ public static class ClientSideRegistry
         }
 
         Pending.Clear();
+    }
+    
+    private static void OnSpawnableDestroyed(AegisSpawnable spawnable)
+    {
+        if (spawnable.SpawnedBy == null || spawnable is not INetworked { NetID: not 0 } networked)
+            return;
+
+        if (!Entries.TryGetValue(spawnable.SpawnedBy, out Entry entry))
+            return;
+
+        int index = entry.Objects.FindIndex(o => o.NetId == networked.NetID);
+        if (index < 0)
+            return;
+
+        NetworkedObject obj = entry.Objects[index];
+        entry.Objects.RemoveAt(index);
+        ByNetId.Remove(obj.NetId);
+        TestOwners.Remove(obj.NetId);
+        ClientSideSpawner.Skip(obj);
+
+        foreach (Player player in entry.Spawned)
+        {
+            if (!player.IsDestroyed)
+                obj.Destroy(player);
+        }
+
+        obj.Release();
     }
 
     /// <summary>

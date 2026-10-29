@@ -239,6 +239,8 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     /// </summary>
     public void OnDestroy()
     {
+        AegisAPI.SpawnableDestroyed?.Invoke(this);
+        
         if (gameObject.isStatic)
             return;
 
