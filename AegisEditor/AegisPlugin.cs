@@ -19,6 +19,7 @@ using LabApi.Loader.Features.Plugins;
 using LabApi.Loader.Features.Plugins.Enums;
 using MEC;
 using Mirror;
+using RemoteAdmin;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
@@ -96,7 +97,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         
         AegisAPI.UseGameParenting = Config.UseGameParenting;
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
-        AegisAPI.GetExternalNetId = t => t.TryGetComponent(out NetworkIdentity identity) ? identity.netId : 0u;
+        ServerActionRegister();
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         
@@ -180,5 +181,19 @@ public class AegisPlugin : Plugin<AegisConfig>
         }
 
         _autoSpawnedPrefabs.Clear();
+    }
+    
+    private void ServerActionRegister() 
+    {
+        AegisAPI.GetExternalNetId = t => t.TryGetComponent(out NetworkIdentity identity) ? identity.netId : 0u;
+        AegisServerCalls.Log += Logger.Info;
+        AegisServerCalls.Execute = (command, obj) =>
+        {
+            CommandSender sender = obj == null
+                ? ServerConsole.Scs
+                : ReferenceHub.GetHub(obj).queryProcessor._sender;
+
+            CommandProcessor.ProcessQuery(command, sender);
+        };
     }
 }
