@@ -37,6 +37,7 @@
         <Reference Include="UnityEngine.PhysicsModule" Private="false" />
         <Reference Include="UnityEngine.AssetBundleModule" Private="false" />
         <Reference Include="UnityEngine.AnimationModule" Private="false" />
+        <Reference Include="UnityEngine.IMGUIModule" Private="false" />
         <Reference Include="Unity.TextMeshPro" Private="false" />
         <Reference Include="UnityEngine.UI" Private="false" />
     </ItemGroup>

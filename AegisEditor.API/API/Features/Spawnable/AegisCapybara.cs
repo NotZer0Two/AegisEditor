@@ -11,7 +11,7 @@ namespace AegisEditor.API.Features.Spawnable;
 /// </summary>
 public class AegisCapybara : AegisSpawnable, ICollidable, INetworked
 {
-    
+    private static GUIContent _fallbackIcon;
     private const string MeshPath = "Packages/it.pyyra.aegiseditor/Assets/Mesh/Capy.fbx";
     private const string MaterialPath = "Packages/it.pyyra.aegiseditor/Assets/Materials/Capybara/capybara.mat";
     
@@ -72,6 +72,15 @@ public class AegisCapybara : AegisSpawnable, ICollidable, INetworked
         visual.transform.SetParent(transform, false);
         visual.AddComponent<MeshFilter>().sharedMesh = mesh;
         visual.AddComponent<MeshRenderer>().sharedMaterial = material;
+    }
+    
+    private void OnDrawGizmos()
+    {
+        if (Application.isPlaying || transform.Find("EditorVisual") != null)
+            return;
+
+        _fallbackIcon ??= EditorGUIUtility.IconContent("d_tree_icon_leaf");
+        Handles.Label(transform.position, _fallbackIcon);
     }
 
     /// <inheritdoc />

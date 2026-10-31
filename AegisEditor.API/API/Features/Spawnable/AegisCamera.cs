@@ -9,6 +9,7 @@ namespace AegisEditor.API.Features.Spawnable;
 /// </summary>
 public class AegisCamera : AegisSpawnable
 {
+    private static GUIContent _fallbackIcon;
     private const string PrefabFolder = "Packages/it.pyyra.aegiseditor/Assets/Prefabs/Camera/";
     private const float GizmoRadius = 2f;
 
@@ -90,6 +91,15 @@ public class AegisCamera : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+    }
+    
+    private void OnDrawGizmos()
+    {
+        if (_visual != null || Application.isPlaying)
+            return;
+
+        _fallbackIcon ??= EditorGUIUtility.IconContent("d_SceneViewCamera");
+        Handles.Label(transform.position, _fallbackIcon);
     }
 
     private void OnDrawGizmosSelected()

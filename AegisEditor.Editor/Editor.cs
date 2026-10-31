@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using AegisEditor.API.Features.Actions;
 using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.ScriptableObjects;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Interfaces;
 using UnityEditor;
 using UnityEngine;
 
@@ -31,6 +33,7 @@ public class Editor
         typeof(AegisAction),
         typeof(SchematicSpawnpoint),
         typeof(AegisSpawningLocation),
+        typeof(AegisTrigger),
     };
 
     /// <summary>
@@ -65,8 +68,23 @@ public class Editor
 
             using (var edit = new PrefabUtility.EditPrefabContentsScope(tempPath))
             {
-                foreach (var component in edit.prefabContentsRoot.GetComponentsInChildren<Component>())
+                GameObject root = edit.prefabContentsRoot;
+                HashSet<Component> kept = new();
+
+                foreach (IKeepComponents keeper in root.GetComponentsInChildren<IKeepComponents>(true))
                 {
+                    foreach (Component keptComponent in keeper.KeptComponents)
+                    {
+                        if (keptComponent != null)
+                            kept.Add(keptComponent);
+                    }
+                }
+
+                foreach (var component in root.GetComponentsInChildren<Component>(true))
+                {
+                    if (component == null || kept.Contains(component))
+                        continue;
+
                     Type componentType = component.GetType();
 
                     if (WhitelistedComponents.Contains(componentType))
