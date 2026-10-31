@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Struct;
 using CentralAuth;
-using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
 using UnityEngine;
