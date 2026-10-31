@@ -45,6 +45,12 @@ public static class PropertyUpdateExtensions
         // Text
         PropertyUpdate.Text => nameof(TextToy.Network_textFormat),
         PropertyUpdate.DisplaySize => nameof(TextToy.Network_displaySize),
+        
+        // Speaker
+        PropertyUpdate.SpeakerIsSpatial => nameof(SpeakerToy.NetworkIsSpatial),
+        PropertyUpdate.SpeakerVolume => nameof(SpeakerToy.NetworkVolume) ,
+        PropertyUpdate.SpeakerMinDistance => nameof(SpeakerToy.NetworkMinDistance),
+        PropertyUpdate.SpeakerMaxDistance => nameof(SpeakerToy.NetworkMinDistance),
         _ => throw new ArgumentOutOfRangeException(nameof(property), property, null),
     };
 }
