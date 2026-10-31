@@ -194,12 +194,14 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
         ObjectCollider.hideFlags = HideFlags.HideInInspector;
     }
 
-    [ExecuteInEditMode]
-    private void OnDestroy()
-    {
-        if (!IsParentOnly)
-            MaterialCache.StopUsingColor(this);
-    }
+/// <inheritdoc />
+protected override void OnDestroy()
+{
+    base.OnDestroy();
+
+    if (!IsParentOnly)
+        MaterialCache.StopUsingColor(this);
+}
 
     /// <inheritdoc />
     public bool SpawnCollider(List<Collider> colliders)
