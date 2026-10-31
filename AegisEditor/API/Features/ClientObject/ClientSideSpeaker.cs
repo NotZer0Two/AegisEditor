@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using AdminToys;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Struct;
 using CentralAuth;
+using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
 using UnityEngine;
@@ -12,11 +12,12 @@ using VoiceChat;
 using VoiceChat.Codec;
 using VoiceChat.Codec.Enums;
 using VoiceChat.Networking;
+using SpeakerToy = AdminToys.SpeakerToy;
 
 namespace AegisEditor.API.Features.ClientObject;
 
 /// <summary>
-/// Client side <see cref="SpeakerToy"/>.
+/// Client side <see cref="AdminToys.SpeakerToy"/>.
 /// </summary>
 public class ClientSideSpeaker : ClientSideObject
 {
@@ -143,7 +144,7 @@ public class ClientSideSpeaker : ClientSideObject
                         Data = EncodedData,
                     };
 
-                    message.SendToHubsConditionally(hub => hub.Mode != ClientInstanceMode.Unverified);
+                    message.SendToHubsConditionally(CanHear);
                 }
 
                 targetTime += FramePeriod;
@@ -269,5 +270,19 @@ public class ClientSideSpeaker : ClientSideObject
         }
 
         return (byte)best;
+    }
+    
+    private bool CanHear(ReferenceHub hub)
+    {
+        if (hub.Mode == ClientInstanceMode.Unverified)
+            return false;
+
+        PrefabInfo prefab = _source.SpawnedBy;
+
+        if (prefab == null)
+            return true;
+
+        Player player = Player.Get(hub);
+        return player != null && ClientSideRegistry.IsReady(prefab, player);
     }
 }
