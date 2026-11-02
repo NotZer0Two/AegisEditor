@@ -206,10 +206,12 @@ public class AegisPlugin : Plugin<AegisConfig>
             Player player = Player.Get(target);
             if (player != null)
             {
+                if (player.RoleBase is not IFpcRole { FpcModule: { } fpm })
+                    return;
+                
                 Vector3 localPos = origin.transform.InverseTransformPoint(player.Position);
                 Vector3 deltaPos = dest.transform.TransformPoint(localPos) - player.Position;
                 Vector3 deltaEuler = dest.transform.rotation.eulerAngles - origin.transform.rotation.eulerAngles;
-                FirstPersonMovementModule fpm = player.GameObject.GetComponentInChildren<FirstPersonMovementModule>();
 
                 fpm.CharController.transform.position += deltaPos;
 

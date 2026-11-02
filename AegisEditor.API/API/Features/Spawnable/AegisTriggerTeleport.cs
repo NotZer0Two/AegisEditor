@@ -15,6 +15,8 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     private readonly HashSet<GameObject> _ignored = new();
     private readonly Dictionary<GameObject, int> _inside = new();
     private readonly Dictionary<GameObject, Coroutine> _pending = new();
+    
+    private AegisTriggerTeleport? _next;
 
     /// <summary>
     /// The object to teleport to. Must have the same geometry as this object.
@@ -44,6 +46,12 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     /// <inheritdoc />
     public IEnumerable<Component> KeptComponents => GetComponents<Collider>();
 
+    private void Awake()
+    {
+        if (destination != null)
+            destination.TryGetComponent(out _next);
+    }
+    
     private void OnTriggerEnter(Collider other)
     {
         GameObject target = GetTarget(other);
@@ -119,8 +127,8 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
 
     private void Teleport(GameObject target)
     {
-        if (destination.TryGetComponent(out AegisTriggerTeleport next))
-            next._ignored.Add(target);
+        if (_next != null)
+            _next._ignored.Add(target);
 
         AegisServerCalls.Teleport?.Invoke(target, gameObject, destination, lagCompensation);
 
