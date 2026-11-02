@@ -11,6 +11,11 @@ namespace AegisEditor.API.Struct;
 [Serializable]
 public class SpeakerClip
 {
+    /// <summary>
+    /// Version of the audio file format.
+    /// </summary>
+    public const byte FormatVersion = 1;
+    
     private static readonly Dictionary<string, byte[]> Cache = new();
 
     /// <summary>
@@ -59,7 +64,12 @@ public class SpeakerClip
             if (!File.Exists(path))
                 return null;
 
-            pcm = File.ReadAllBytes(path);
+            byte[]? decoded = Decode(File.ReadAllBytes(path));
+
+            if (decoded == null)
+                return null;
+
+            pcm = decoded;
             Cache[FileName] = pcm;
         }
 
@@ -77,15 +87,42 @@ public class SpeakerClip
         float[] all = new float[clip.samples * clip.channels];
         clip.GetData(all, 0);
 
-        byte[] pcm = new byte[clip.samples * 2];
+        byte[] file = new byte[1 + clip.samples * 2];
+        file[0] = FormatVersion;
 
         for (int i = 0; i < clip.samples; i++)
         {
             short sample = (short)Mathf.Clamp(Mathf.RoundToInt(all[i * clip.channels] * short.MaxValue), short.MinValue, short.MaxValue);
-            pcm[i * 2] = (byte)sample;
-            pcm[i * 2 + 1] = (byte)(sample >> 8);
+            file[1 + i * 2] = (byte)sample;
+            file[2 + i * 2] = (byte)(sample >> 8);
         }
 
+        return file;
+    }
+    
+    /// <summary>
+    /// Converts the content of an audio file of any supported version to 16-bit mono 48 kHz PCM.
+    /// </summary>
+    /// <param name="file">The file content, starting with the version byte.</param>
+    /// <returns>The PCM, or null if the version is not supported.</returns>
+    public static byte[]? Decode(byte[] file)
+    {
+        if (file.Length < 1)
+            return null;
+
+        switch (file[0])
+        {
+            case 1:
+                return DecodeV1(file);
+            default:
+                return null;
+        }
+    }
+
+    private static byte[] DecodeV1(byte[] file)
+    {
+        byte[] pcm = new byte[file.Length - 1];
+        Buffer.BlockCopy(file, 1, pcm, 0, pcm.Length);
         return pcm;
     }
 }
