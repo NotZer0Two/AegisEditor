@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Interfaces;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace AegisEditor.API.Features.Spawnable;
 
@@ -15,13 +16,27 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     private readonly HashSet<GameObject> _ignored = new();
     private readonly Dictionary<GameObject, int> _inside = new();
     private readonly Dictionary<GameObject, Coroutine> _pending = new();
-    
+
+    [SerializeField]
+    private GameObject _destination;
+
     private AegisTriggerTeleport? _next;
 
     /// <summary>
     /// The object to teleport to. Must have the same geometry as this object.
     /// </summary>
-    public GameObject destination;
+    public GameObject destination
+    {
+        get => _destination;
+        set
+        {
+            _destination = value;
+            _next = null;
+
+            if (value != null)
+                value.TryGetComponent(out _next);
+        }
+    }
 
     /// <summary>
     /// Roles allowed to teleport. If empty, everything is allowed.
@@ -46,12 +61,18 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     /// <inheritdoc />
     public IEnumerable<Component> KeptComponents => GetComponents<Collider>();
 
-    private void Awake()
+    /// <summary>
+    /// Replaces the allowed roles at runtime. An empty collection allows everything.
+    /// </summary>
+    /// <param name="roles">The roles allowed to teleport.</param>
+    public void SetAllowedRoles(IEnumerable<SelectableRoles> roles)
     {
-        if (destination != null)
-            destination.TryGetComponent(out _next);
+        allowedRoles.Clear();
+        allowedRoles.AddRange(roles);
     }
-    
+
+    private void Awake() => destination = _destination;
+
     private void OnTriggerEnter(Collider other)
     {
         GameObject target = GetTarget(other);
