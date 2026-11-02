@@ -27,11 +27,9 @@ public class ClientSideSpeaker : ClientSideObject
     private const float GainCorrectionFactor = 1.41421356237f;
 
     private static readonly Dictionary<AegisSpeaker, byte> Assigned = new();
-    private static readonly Dictionary<AudioClip, float[]> Cache = new();
     private static readonly float[] FrameData = new float[FrameSize];
     private static readonly byte[] EncodedData = new byte[VoiceChatSettings.MaxEncodedSize];
 
-    private readonly AegisSpeaker _source;
     private readonly OpusEncoder _encoder = new(OpusApplicationType.Audio);
     private CoroutineHandle _playback;
 
@@ -41,7 +39,6 @@ public class ClientSideSpeaker : ClientSideObject
     /// <param name="source">The speaker this object mirrors.</param>
     public ClientSideSpeaker(AegisSpeaker source) : base(source)
     {
-        _source = source;
         AegisSpeaker.Playing += OnPlaying;
         AegisSpeaker.Stopping += OnStopping;
     }
@@ -54,14 +51,16 @@ public class ClientSideSpeaker : ClientSideObject
     /// <inheritdoc />
     protected override string PrefabName => nameof(SpeakerToy);
 
+    private AegisSpeaker Source => (AegisSpeaker)BaseSource;
+
     /// <inheritdoc />
     protected override void WriteSyncVars(NetworkWriter writer)
     {
         NetworkWriterExtensions.WriteByte(writer, GetId());
-        writer.WriteBool(_source.IsSpatial);
-        writer.WriteFloat(_source.Volume);
-        writer.WriteFloat(_source.MinDistance);
-        writer.WriteFloat(_source.MaxDistance);
+        writer.WriteBool(Source.IsSpatial);
+        writer.WriteFloat(Source.Volume);
+        writer.WriteFloat(Source.MinDistance);
+        writer.WriteFloat(Source.MaxDistance);
     }
 
     /// <inheritdoc />
@@ -71,22 +70,22 @@ public class ClientSideSpeaker : ClientSideObject
         AegisSpeaker.Stopping -= OnStopping;
 
         Stop();
-        Assigned.Remove(_source);
+        Assigned.Remove(Source);
         base.Release();
     }
 
     /// <summary>
-    /// Plays the PCM samples, replacing any audio currently playing.
+    /// Plays 16-bit mono PCM at 48 kHz, replacing any audio currently playing.
     /// </summary>
-    /// <param name="samples">Mono samples at 48 kHz in the range -1 to 1.</param>
+    /// <param name="pcm">Little endian 16-bit samples.</param>
     /// <param name="loop">Whether to repeat the samples until stopped.</param>
-    public void Play(float[] samples, bool loop = false)
+    public void Play(byte[] pcm, bool loop = false)
     {
-        if (samples.Length == 0)
+        if (pcm.Length < 2)
             return;
 
         Stop();
-        _playback = Timing.RunCoroutine(Transmit(samples, loop), Segment.Update);
+        _playback = Timing.RunCoroutine(Transmit(pcm, loop), Segment.Update);
     }
 
     /// <summary>
@@ -97,10 +96,12 @@ public class ClientSideSpeaker : ClientSideObject
         Timing.KillCoroutines(_playback);
     }
 
-    private IEnumerator<float> Transmit(float[] samples, bool loop)
+    private IEnumerator<float> Transmit(byte[] pcm, bool loop)
     {
+        int total = pcm.Length / 2;
         double targetTime = NetworkTime.time;
         int position = 0;
+        int frames = 0;
 
         while (true)
         {
@@ -110,7 +111,7 @@ public class ClientSideSpeaker : ClientSideObject
 
                 while (read < FrameSize)
                 {
-                    if (position >= samples.Length)
+                    if (position >= total)
                     {
                         if (!loop)
                             break;
@@ -118,8 +119,14 @@ public class ClientSideSpeaker : ClientSideObject
                         position = 0;
                     }
 
-                    int count = Mathf.Min(FrameSize - read, samples.Length - position);
-                    Array.Copy(samples, position, FrameData, read, count);
+                    int count = Mathf.Min(FrameSize - read, total - position);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        int offset = (position + i) * 2;
+                        FrameData[read + i] = (short)(pcm[offset] | (pcm[offset + 1] << 8)) / 32768f * GainCorrectionFactor;
+                    }
+
                     position += count;
                     read += count;
                 }
@@ -129,9 +136,6 @@ public class ClientSideSpeaker : ClientSideObject
 
                 if (read < FrameSize)
                     Array.Clear(FrameData, read, FrameSize - read);
-
-                for (int i = 0; i < FrameSize; i++)
-                    FrameData[i] *= GainCorrectionFactor;
 
                 int length = _encoder.Encode(FrameData, EncodedData, FrameSize);
 
@@ -144,12 +148,22 @@ public class ClientSideSpeaker : ClientSideObject
                         Data = EncodedData,
                     };
 
-                    message.SendToHubsConditionally(CanHear);
+                    int sent = 0;
+                    message.SendToHubsConditionally(hub =>
+                    {
+                        bool ok = CanHear(hub);
+                        if (ok)
+                            sent++;
+                        return ok;
+                    });
+
+                    if (frames++ % 50 == 0)
+                        AegisServerCalls.Log.Invoke($"Speaker {GetId()}: frame {frames}, {length} bytes, {sent} recipients");
                 }
 
                 targetTime += FramePeriod;
 
-                if (!loop && position >= samples.Length)
+                if (!loop && position >= total)
                     yield break;
             }
 
@@ -159,26 +173,28 @@ public class ClientSideSpeaker : ClientSideObject
 
     private void OnPlaying(AegisSpeaker speaker, SpeakerClip clip)
     {
-        if (speaker != _source || clip.Clip == null)
+        byte[]? pcm = clip.GetPcm();
+        
+        if (speaker != Source || pcm == null)
             return;
 
-        Play(GetSamples(clip.Clip), clip.Loop);
+        Play(pcm, clip.Loop);
     }
 
     private void OnStopping(AegisSpeaker speaker)
     {
-        if (speaker == _source)
+        if (speaker == Source)
             Stop();
     }
 
     private byte GetId()
     {
-        if (Assigned.TryGetValue(_source, out byte id))
+        if (Assigned.TryGetValue(Source, out byte id))
             return id;
 
         bool found = false;
 
-        foreach (AegisSpeaker other in _source.ShareAudioWith)
+        foreach (AegisSpeaker other in Source.ShareAudioWith)
         {
             if (other != null && Assigned.TryGetValue(other, out id))
             {
@@ -190,9 +206,9 @@ public class ClientSideSpeaker : ClientSideObject
         if (!found)
             id = FindBestId();
 
-        Assigned[_source] = id;
+        Assigned[Source] = id;
 
-        foreach (AegisSpeaker other in _source.ShareAudioWith)
+        foreach (AegisSpeaker other in Source.ShareAudioWith)
         {
             if (other != null)
                 Assigned[other] = id;
@@ -201,60 +217,18 @@ public class ClientSideSpeaker : ClientSideObject
         return id;
     }
 
-    private static float[] GetSamples(AudioClip clip)
-    {
-        if (Cache.TryGetValue(clip, out float[] cached))
-            return cached;
-
-        int channels = clip.channels;
-        int frames = clip.samples;
-        float[] data = new float[frames * channels];
-        clip.GetData(data, 0);
-
-        float[] mono = new float[frames];
-
-        for (int f = 0; f < frames; f++)
-        {
-            float sum = 0f;
-
-            for (int c = 0; c < channels; c++)
-                sum += data[f * channels + c];
-
-            mono[f] = sum / channels;
-        }
-
-        float[] result = mono;
-
-        if (clip.frequency != SampleRate)
-        {
-            int length = (int)((long)frames * SampleRate / clip.frequency);
-            double ratio = (double)clip.frequency / SampleRate;
-            result = new float[length];
-
-            for (int i = 0; i < length; i++)
-            {
-                double pos = i * ratio;
-                int index = (int)pos;
-                float frac = (float)(pos - index);
-                float a = mono[index];
-                float b = index + 1 < frames ? mono[index + 1] : a;
-                result[i] = a + (b - a) * frac;
-            }
-        }
-
-        Cache[clip] = result;
-        return result;
-    }
-
     private byte FindBestId()
     {
         Span<float> nearest = stackalloc float[byte.MaxValue + 1];
         nearest.Fill(float.PositiveInfinity);
 
-        Vector3 position = _source.Position;
+        Vector3 position = Source.Position;
 
         foreach (KeyValuePair<AegisSpeaker, byte> pair in Assigned)
         {
+            if (pair.Key == null)
+                continue;
+
             float distance = (position - pair.Key.Position).sqrMagnitude;
 
             if (distance < nearest[pair.Value])
@@ -271,13 +245,13 @@ public class ClientSideSpeaker : ClientSideObject
 
         return (byte)best;
     }
-    
+
     private bool CanHear(ReferenceHub hub)
     {
         if (hub.Mode == ClientInstanceMode.Unverified)
             return false;
 
-        PrefabInfo prefab = _source.SpawnedBy;
+        PrefabInfo prefab = Source.SpawnedBy;
 
         if (prefab == null)
             return true;
