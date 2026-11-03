@@ -17,12 +17,15 @@ public abstract class ClientSideObject : NetworkedObject
     private readonly SpawnMessage _spawn;
     private readonly ObjectDestroyMessage _destroy;
 
+    protected AegisSpawnable BaseSource { get; }
+    
     /// <summary>
     /// The object to register
     /// </summary>
     /// <param name="source"></param>
     protected ClientSideObject(AegisSpawnable source)
     {
+        BaseSource = source;
         bool isStatic = source.gameObject.isStatic && source is not AegisText { billboard: true };
 
         AegisSpawnable parent = source.ClientParent;

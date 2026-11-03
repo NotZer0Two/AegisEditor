@@ -17,8 +17,11 @@ public sealed class AssetBundleImporter : Importer<GameObject>
     /// <inheritdoc />
     public override bool CanImport(string path)
     {
+        if (!File.Exists(path))
+            return false;
+
         string extension = Path.GetExtension(path);
-        return File.Exists(path) && (extension == ".bundle" || extension == ".assets");
+        return extension == string.Empty || extension == ".bundle" || extension == ".assets";
     }
 
     /// <inheritdoc />
@@ -35,8 +38,11 @@ public sealed class AssetBundleImporter : Importer<GameObject>
 
         try
         {
-            return bundle.LoadAllAssets<GameObject>().FirstOrDefault(g => g.GetComponent<AegisPrefab>() != null)
-                   ?? bundle.LoadAllAssets<GameObject>().FirstOrDefault();
+            GameObject[] prefabs = bundle.LoadAllAssets<GameObject>();
+
+            return prefabs.FirstOrDefault(g => g.GetComponent<AegisPrefab>() != null)
+                   ?? prefabs.FirstOrDefault()
+                   ?? throw new IOException("The asset bundle does not contain any prefab.");
         }
         finally
         {

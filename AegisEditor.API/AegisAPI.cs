@@ -67,6 +67,11 @@ public class AegisAPI
     /// Returns path of bundles directory.
     /// </summary>
     public static string BundlesDirectory { get; private set; }
+    
+    /// <summary>
+    /// Returns path of the directory holding the audio files of speaker clips.
+    /// </summary>
+    public static string AudioDirectory { get; private set; }
 
     /// <summary>
     /// A static dictionary that stores loaded bundles, mapping a bundle's name (as a string) 
@@ -98,6 +103,11 @@ public class AegisAPI
         if (!Directory.Exists(BundlesDirectory))
             Directory.CreateDirectory(BundlesDirectory);
 
+        AudioDirectory = Path.Combine(BundlesDirectory, "Audio");
+
+        if (!Directory.Exists(AudioDirectory))
+            Directory.CreateDirectory(AudioDirectory);
+        
         if (shouldDetect)
         {
             _fileWatcher = new FileSystemWatcher(BundlesDirectory);

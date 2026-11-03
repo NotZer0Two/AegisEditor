@@ -40,4 +40,10 @@ public enum PropertyUpdate
     // TextToy
     Text,
     DisplaySize,
+    
+    //Speaker
+    SpeakerIsSpatial,
+    SpeakerVolume,
+    SpeakerMinDistance,
+    SpeakerMaxDistance,
 }

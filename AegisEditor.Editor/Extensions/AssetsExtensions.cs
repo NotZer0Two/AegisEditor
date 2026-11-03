@@ -410,4 +410,59 @@ public static class AssetsExtensions
 
         return trigger;
     }
+    
+       /// <summary>
+        /// Adds a trigger to the bundle.
+        /// </summary>
+        /// <param name="bundle">The bundle to target.</param>
+        /// <param name="parent">Parent to target.</param>
+        /// <returns>The newly created locker.</returns>
+        /// <example>BundleExtensions.GetBundle()?.AddTeleport(Selection.activeTransform);</example>
+        public static AegisTriggerTeleport AddTeleport(this AegisPrefab bundle, Transform parent)
+        {
+            GameObject go = new GameObject("Teleport")
+            {
+                transform =
+                {
+                    parent = parent
+                }
+            };
+    
+            BoxCollider collider = go.AddComponent<BoxCollider>();
+            collider.isTrigger = true;
+    
+            AegisTriggerTeleport trigger = go.AddComponent<AegisTriggerTeleport>();
+    
+            Undo.RegisterCreatedObjectUndo(go, "Created Teleport");
+            Selection.activeGameObject = go;
+    
+            return trigger;
+        }
+       
+           /// <summary>
+           /// Adds a speaker to the bundle.
+           /// </summary>
+           /// <param name="bundle">The bundle to target.</param>
+           /// <param name="parent">Parent to target.</param>
+           /// <returns>The newly created speaker.</returns>
+           /// <example>BundleExtensions.GetBundle()?.AddInteractable(Selection.activeTransform);</example>
+           public static AegisSpeaker AddSpeaker(this AegisPrefab bundle, Transform parent)
+           {
+               GameObject go = new GameObject($"Speaker")
+               {
+                   transform =
+                   {
+                       parent = parent
+                   }
+               };
+       
+               AegisSpeaker lockerSpawner = go.AddComponent<AegisSpeaker>();
+       
+               lockerSpawner.InitializeInEditor();
+       
+               Undo.RegisterCreatedObjectUndo(lockerSpawner.gameObject, "Created Speaker");
+               Selection.activeGameObject = lockerSpawner.gameObject;
+       
+               return lockerSpawner;
+           }
 }

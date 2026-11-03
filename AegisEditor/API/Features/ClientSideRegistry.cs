@@ -40,6 +40,7 @@ public static class ClientSideRegistry
         [typeof(AegisCullingParent)] = s => new ClientSideCullingParent(((AegisCullingParent)s)),
         [typeof(AegisLight)] = s => new ClientSideLight(((AegisLight)s)),
         [typeof(AegisText)] = s => new ClientSideText(((AegisText)s)),
+        [typeof(AegisSpeaker)] = s => new ClientSideSpeaker(((AegisSpeaker)s)),
 
         [typeof(AegisCapybara)] = s => new ClientSideCapybara((AegisCapybara)s),
 

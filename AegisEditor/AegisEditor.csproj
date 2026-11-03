@@ -41,9 +41,11 @@
         <Reference Include="UnityEngine.CoreModule" Publicize="true" Private="false" />
         <Reference Include="UnityEngine.PhysicsModule" Private="false" />
         <Reference Include="UnityEngine.AssetBundleModule" Private="false" />
+        <Reference Include="UnityEngine.AudioModule" Private="false" />
         <Reference Include="Unity.TextMeshPro" Private="false" />
         <Reference Include="Mirror" Publicize="true" Private="false" />
         <Reference Include="YamlDotNet" Private="false" />
+        <Reference Include="netstandard" Private="false" />
     </ItemGroup>
     
     <ItemGroup>

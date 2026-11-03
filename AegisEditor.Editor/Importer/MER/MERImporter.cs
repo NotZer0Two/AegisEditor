@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AegisEditor.API.Enum;
+using AegisEditor.API.Features.Actions;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.Editor.API.Features;
 using AegisEditor.Editor.Extensions;
@@ -20,6 +21,8 @@ public sealed class MERImporter : Importer<SchematicObjectDataList>
     private delegate Transform BlockHandler(SchematicBlockData block, Transform parent, ImportContext context);
 
     private readonly Dictionary<BlockType, BlockHandler> _handlers;
+
+    private string _path;
 
     /// <summary>
     /// Creates the importer.
@@ -48,15 +51,19 @@ public sealed class MERImporter : Importer<SchematicObjectDataList>
         Directory.Exists(path) && File.Exists(Path.Combine(path, Path.GetFileName(path) + ".json"));
 
     /// <inheritdoc />
-    protected override SchematicObjectDataList Parse(string path) =>
-        JsonConvert.DeserializeObject<SchematicObjectDataList>(
+    protected override SchematicObjectDataList Parse(string path)
+    {
+        _path = path;
+        return JsonConvert.DeserializeObject<SchematicObjectDataList>(
             File.ReadAllText(Path.Combine(path, Path.GetFileName(path) + ".json")));
+    }
 
     /// <inheritdoc />
     protected override void Build(SchematicObjectDataList data, ImportContext context)
     {
         context.Objects[data.RootObjectId] = context.Bundle.transform;
         CreateChildren(data.RootObjectId, data.Blocks, context);
+        CreateTeleporters(context);
         PrefabUtility.ApplyPrefabInstance(context.Bundle.gameObject, InteractionMode.UserAction);
     }
 
@@ -82,6 +89,49 @@ public sealed class MERImporter : Importer<SchematicObjectDataList>
 
             context.Objects[block.ObjectId] = created;
             CreateChildren(block.ObjectId, blocks, context);
+        }
+    }
+
+    private void CreateTeleporters(ImportContext context)
+    {
+        string teleportPath = Path.Combine(_path, Path.GetFileName(_path) + "-Teleports.json");
+        if (!File.Exists(teleportPath))
+            return;
+
+        List<TeleportData> teleports = JsonConvert.DeserializeObject<List<TeleportData>>(File.ReadAllText(teleportPath));
+        List<(AegisTriggerTeleport Component, TeleportData Data)> created = new();
+
+        foreach (TeleportData data in teleports)
+        {
+            try
+            {
+                GameObject go = new GameObject(data.Name);
+                go.transform.SetParent(context.GetOrRoot(data.ParentId), false);
+                ImportContext.ApplyTransform(go.transform, data.Position, data.Rotation, data.Scale);
+
+                go.AddComponent<BoxCollider>().isTrigger = true;
+                AegisTriggerTeleport teleport = go.AddComponent<AegisTriggerTeleport>();
+
+                foreach (string role in data.AllowedRoles)
+                {
+                    if (Enum.TryParse(role, out SelectableRoles parsed))
+                        teleport.allowedRoles.Add(parsed);
+                }
+
+                context.Objects[data.ObjectId] = go.transform;
+                created.Add((teleport, data));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[{Name}] Teleporter '{data.Name}' (ID={data.ObjectId}) failed: {ex}");
+            }
+        }
+
+        foreach ((AegisTriggerTeleport component, TeleportData data) in created)
+        {
+            if (data.TargetTeleporters.Count > 0 &&
+                context.Objects.TryGetValue(data.TargetTeleporters[0].Id, out Transform target))
+                component.destination = target.gameObject;
         }
     }
 
