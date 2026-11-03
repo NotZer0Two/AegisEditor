@@ -19,6 +19,7 @@ public static class SpawnableTypeExtensions
         SpawnableType.Capybara => typeof(CapybaraToy),
         SpawnableType.Culling => typeof(SpawnableCullingParent),
         SpawnableType.Text => typeof(TextToy),
+        SpawnableType.Speaker => typeof(SpeakerToy),
         _ => throw new ArgumentOutOfRangeException(nameof(property), property, null),
     };
     

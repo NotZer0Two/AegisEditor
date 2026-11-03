@@ -28,6 +28,7 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
     public ServerDoorSpawner(AegisDoor source)
     {
         Source = source;
+        lastState = source.isOpened;
         door = UnityEngine.Object.Instantiate(PrefabCache.Get<BasicDoor>(source.doorType.GetName()));
 
         Transform t = door.transform;

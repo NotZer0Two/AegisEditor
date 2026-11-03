@@ -18,6 +18,7 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
 
     private GameObject _visual;
     private SpawnableLockerType _visualAsset;
+    private static GUIContent _fallbackIcon;
 
     [Serializable]
     private class Snapshot
@@ -128,6 +129,15 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
     }
 
+    private void OnDrawGizmos()
+    {
+        if (_visual != null || Application.isPlaying)
+            return;
+
+        _fallbackIcon ??= EditorGUIUtility.IconContent("d_Project");
+        Handles.Label(transform.position, _fallbackIcon);
+    }
+    
     /// <inheritdoc />
     public void OnBeforeSerialize()
     {

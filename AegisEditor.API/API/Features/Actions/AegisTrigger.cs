@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AegisEditor.API.Interfaces;
 using UnityEngine;
 
 namespace AegisEditor.API.Features.Actions;
@@ -7,7 +8,7 @@ namespace AegisEditor.API.Features.Actions;
 /// Runs actions when something enters, stays in, or exits this collider.
 /// </summary>
 [RequireComponent(typeof(Collider))]
-public class AegisTrigger : MonoBehaviour
+public class AegisTrigger : MonoBehaviour, IKeepComponents
 {
     /// <summary>
     /// Actions run when something enters.
@@ -24,6 +25,9 @@ public class AegisTrigger : MonoBehaviour
     /// </summary>
     public List<AegisAction> onExit = new();
 
+    /// <inheritdoc />
+    public IEnumerable<Component> KeptComponents => GetComponents<Collider>();
+    
     /// <summary>
     /// Only allow <see cref="onEnter"/> to run once.
     /// </summary>

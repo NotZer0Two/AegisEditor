@@ -12,6 +12,7 @@ public enum PropertyUpdate
     Position,
     Scale,
     Rotation,
+    Parent,
     
     // Primitive
     PrimitiveColor,
@@ -39,4 +40,10 @@ public enum PropertyUpdate
     // TextToy
     Text,
     DisplaySize,
+    
+    //Speaker
+    SpeakerIsSpatial,
+    SpeakerVolume,
+    SpeakerMinDistance,
+    SpeakerMaxDistance,
 }

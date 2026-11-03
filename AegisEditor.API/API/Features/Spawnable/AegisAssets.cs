@@ -11,6 +11,8 @@ namespace AegisEditor.API.Features.Spawnable;
 /// </summary>
 public class AegisAssets : AegisSpawnable
 {
+    private static GUIContent _fallbackIcon;
+    
     private static readonly string[] PrefabFolders =
     [
         "Packages/it.pyyra.aegiseditor/Assets/Prefabs/Connector/",
@@ -89,5 +91,14 @@ public class AegisAssets : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+    }
+    
+    private void OnDrawGizmos()
+    {
+        if (_visual != null || Application.isPlaying)
+            return;
+
+        _fallbackIcon ??= EditorGUIUtility.IconContent("NavMeshObstacle Icon");
+        Handles.Label(transform.position, _fallbackIcon);
     }
 }

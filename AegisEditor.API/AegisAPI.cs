@@ -32,14 +32,31 @@ public class AegisAPI
     public static Action<AegisSpawnable> SpawnableSpawned;
     
     /// <summary>
+    /// Called when a spawnable is destroyed.
+    /// </summary>
+    public static Action<AegisSpawnable> SpawnableDestroyed;
+    
+    /// <summary>
     /// Invoked when a Bundle is loaded.
     /// </summary>
     public static Action<BundleInfo> BundleLoaded;
+    
+    /// <summary>
+    /// Returns the net id of a game object a spawnable can be parented to on the client, like a pickup. 0 if there is none.
+    /// Set by the plugin because it needs Mirror.
+    /// </summary>
+    public static Func<Transform, uint> GetExternalNetId;
 
     /// <summary>
     /// Returns if API is already initialized.
     /// </summary>
     public static bool IsInitialized { get; private set; }
+
+    /// <summary>
+    /// Parents objects on the client following the Unity hierarchy, like the game does with admin toys.
+    /// Empty objects become invisible primitives and transforms are synced in local space.
+    /// </summary>
+    public static bool UseGameParenting { get; set; } = true;
 
     /// <summary>
     /// Returns path of plugin directory.
@@ -50,6 +67,11 @@ public class AegisAPI
     /// Returns path of bundles directory.
     /// </summary>
     public static string BundlesDirectory { get; private set; }
+    
+    /// <summary>
+    /// Returns path of the directory holding the audio files of speaker clips.
+    /// </summary>
+    public static string AudioDirectory { get; private set; }
 
     /// <summary>
     /// A static dictionary that stores loaded bundles, mapping a bundle's name (as a string) 
@@ -81,6 +103,11 @@ public class AegisAPI
         if (!Directory.Exists(BundlesDirectory))
             Directory.CreateDirectory(BundlesDirectory);
 
+        AudioDirectory = Path.Combine(BundlesDirectory, "Audio");
+
+        if (!Directory.Exists(AudioDirectory))
+            Directory.CreateDirectory(AudioDirectory);
+        
         if (shouldDetect)
         {
             _fileWatcher = new FileSystemWatcher(BundlesDirectory);

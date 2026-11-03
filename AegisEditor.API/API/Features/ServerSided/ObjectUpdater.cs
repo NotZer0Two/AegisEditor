@@ -80,16 +80,19 @@ public abstract class ObjectUpdater : MonoBehaviour
 
     private void Update()
     {
-        _timer += Time.deltaTime;
-        if (_timer < Interval)
-            return;
-
-        _timer = 0f;
+        float time = Time.time;
 
         for (int i = UpdatableObjects.Count - 1; i >= 0; i--)
         {
-            if (i < UpdatableObjects.Count)
-                SendUpdate(UpdatableObjects[i]);
+            if (i >= UpdatableObjects.Count)
+                continue;
+
+            AegisSpawnable spawnable = UpdatableObjects[i];
+            if (time < spawnable.NextSyncTime)
+                continue;
+
+            spawnable.NextSyncTime = time + (spawnable.SyncInterval ?? Interval);
+            SendUpdate(spawnable);
         }
     }
 

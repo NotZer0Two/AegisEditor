@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using AegisEditor.API.Features.Actions;
 using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.ScriptableObjects;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Interfaces;
+using AegisEditor.API.Struct;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +20,9 @@ public class Editor
     /// Path of extensions.
     /// </summary>
     internal const string Path = "GameObject/AegisEditor";
-    
+
+    private const string TempFolder = "Assets/AegisTemp";
+
     /// <summary>
     /// Components that will not be wiped for security
     /// </summary>
@@ -31,6 +36,8 @@ public class Editor
         typeof(AegisAction),
         typeof(SchematicSpawnpoint),
         typeof(AegisSpawningLocation),
+        typeof(AegisTrigger),
+        typeof(AegisTriggerTeleport),
     };
 
     /// <summary>
@@ -46,6 +53,11 @@ public class Editor
 
         List<string> assetNames = new List<string>();
 
+        if (!AssetDatabase.IsValidFolder(TempFolder))
+            AssetDatabase.CreateFolder("Assets", "AegisTemp");
+
+        string audioDirectory = System.IO.Path.Combine(outputPath, "Audio");
+
         for (int x = 0; x < assetPaths.Length; x++)
         {
             string assetPath = assetPaths[x];
@@ -55,18 +67,43 @@ public class Editor
 
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
 
-            string tempPath = $"Assets/{prefab.name}.prefab";
+            string tempPath = $"{TempFolder}/{prefab.name}.prefab";
 
             GameObject instanceRoot = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 
+            PrefabUtility.UnpackPrefabInstance(instanceRoot, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             PrefabUtility.SaveAsPrefabAsset(instanceRoot, tempPath, out _);
 
             UnityEngine.Object.DestroyImmediate(instanceRoot);
 
             using (var edit = new PrefabUtility.EditPrefabContentsScope(tempPath))
             {
-                foreach (var component in edit.prefabContentsRoot.GetComponentsInChildren<Component>())
+                GameObject root = edit.prefabContentsRoot;
+
+                foreach (AegisSpeaker speaker in root.GetComponentsInChildren<AegisSpeaker>(true))
                 {
+                    speaker.Bake(audioDirectory);
+
+                    foreach (SpeakerClip clip in speaker.Clips)
+                        Debug.Log($"Baked '{clip.Name}' to {clip.FileName}.pcm");
+                }
+
+                HashSet<Component> kept = new();
+
+                foreach (IKeepComponents keeper in root.GetComponentsInChildren<IKeepComponents>(true))
+                {
+                    foreach (Component keptComponent in keeper.KeptComponents)
+                    {
+                        if (keptComponent != null)
+                            kept.Add(keptComponent);
+                    }
+                }
+
+                foreach (var component in root.GetComponentsInChildren<Component>(true))
+                {
+                    if (component == null || kept.Contains(component))
+                        continue;
+
                     Type componentType = component.GetType();
 
                     if (WhitelistedComponents.Contains(componentType))
@@ -98,9 +135,6 @@ public class Editor
 
         Debug.Log($"<color=lime>Build of bundle <color=orange>{bundleName}</color> complete!</color>");
 
-        foreach (var asset in assetNames)
-        {
-            AssetDatabase.DeleteAsset(asset);
-        }
+        AssetDatabase.DeleteAsset(TempFolder);
     }
 }

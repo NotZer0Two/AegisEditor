@@ -10,6 +10,7 @@ public enum SpawnableType : byte
     Light,
     Culling,
     Text,
+    Speaker,
     
     Capybara,
     

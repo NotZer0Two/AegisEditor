@@ -8,7 +8,7 @@ namespace AegisEditor.API.Features.Spawnable;
 /// <summary>
 /// Hides every child object when no player sees it. Bounds are defined manually through <see cref="boundsCollider"/>.
 /// </summary>
-public class AegisCullingParent : AegisSpawnable, INetworked, INotAToyButAToy
+public class AegisCullingParent : AegisSpawnable, INetworked, INotAToyButAToy, IKeepComponents
 {
     private static readonly Color WireColor = new(0.2588f, 0.6745f, 1f, 1f);
     private static readonly Color FillColor = new(0.2588f, 0.6745f, 1f, 0.1f);
@@ -25,6 +25,9 @@ public class AegisCullingParent : AegisSpawnable, INetworked, INotAToyButAToy
 
     /// <inheritdoc />
     public uint NetID { get; set; }
+    
+    /// <inheritdoc />
+    public IEnumerable<Component> KeptComponents => [boundsCollider];
     
     /// <inheritdoc />
     public override void OnStart()

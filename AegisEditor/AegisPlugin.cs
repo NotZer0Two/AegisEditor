@@ -14,11 +14,15 @@ using Interactables.Interobjects;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features;
+using LabApi.Features.Wrappers;
 using LabApi.Loader.Features.Paths;
 using LabApi.Loader.Features.Plugins;
 using LabApi.Loader.Features.Plugins.Enums;
 using MEC;
 using Mirror;
+using PlayerRoles;
+using PlayerRoles.FirstPersonControl;
+using RemoteAdmin;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
@@ -94,7 +98,9 @@ public class AegisPlugin : Plugin<AegisConfig>
         Instance = this;
         DirectoryInfo path = PathManager.Plugins.CreateSubdirectory("AegisEditor");
         
+        AegisAPI.UseGameParenting = Config.UseGameParenting;
         AegisAPI.Initialize(path.FullName, new DefaultObjectSpawner(), Config.DynamicUpdate);
+        ServerActionRegister();
         ClientSideRegistry.Enable();
         Harmony.PatchAll();
         
@@ -178,5 +184,60 @@ public class AegisPlugin : Plugin<AegisConfig>
         }
 
         _autoSpawnedPrefabs.Clear();
+    }
+    
+    private void ServerActionRegister() 
+    {
+        AegisAPI.GetExternalNetId = t => t.TryGetComponent(out NetworkIdentity identity) ? identity.netId : 0u;
+        AegisServerCalls.Log += Logger.Info;
+        AegisServerCalls.Execute = (command, obj) =>
+        {
+            CommandSender sender = obj == null
+                ? ServerConsole.Scs
+                : ReferenceHub.GetHub(obj).queryProcessor._sender;
+
+            CommandProcessor.ProcessQuery(command, sender);
+        };
+        AegisServerCalls.GetRole = obj =>
+            ReferenceHub.TryGetHub(obj, out ReferenceHub hub) ? (SelectableRoles)hub.GetRoleId() : (SelectableRoles)RoleTypeId.None;
+
+        AegisServerCalls.Teleport = (target, origin, dest, lagCompensation) =>
+        {
+            Player player = Player.Get(target);
+            if (player != null)
+            {
+                if (player.RoleBase is not IFpcRole { FpcModule: { } fpm })
+                    return;
+                
+                Vector3 localPos = origin.transform.InverseTransformPoint(player.Position);
+                Vector3 deltaPos = dest.transform.TransformPoint(localPos) - player.Position;
+                Vector3 deltaEuler = dest.transform.rotation.eulerAngles - origin.transform.rotation.eulerAngles;
+
+                fpm.CharController.transform.position += deltaPos;
+
+                if (lagCompensation)
+                {
+                    float ping = (float)(player.ReferenceHub.netIdentity.connectionToClient.rtt * 2d / 1000d);
+                    fpm.CharController.Move(Quaternion.Euler(deltaEuler) * player.Velocity * ping);
+                }
+
+                fpm.ServerOverridePosition(fpm.CharController.transform.position);
+                fpm.ServerOverrideRotation(player.Rotation.eulerAngles + deltaEuler);
+                return;
+            }
+
+            Quaternion deltaRot = dest.transform.rotation * Quaternion.Inverse(origin.transform.rotation);
+            Vector3 local = origin.transform.InverseTransformPoint(target.transform.position);
+
+            target.transform.SetPositionAndRotation(
+                dest.transform.TransformPoint(local),
+                deltaRot * target.transform.rotation);
+
+            if (target.TryGetComponent(out Rigidbody rb))
+            {
+                rb.velocity = deltaRot * rb.velocity;
+                rb.angularVelocity = deltaRot * rb.angularVelocity;
+            }
+        };
     }
 }

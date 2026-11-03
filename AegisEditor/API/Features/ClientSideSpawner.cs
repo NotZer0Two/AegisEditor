@@ -17,6 +17,7 @@ public static class ClientSideSpawner
     public static double BudgetMs = 2.0;
 
     private static readonly Dictionary<Player, Queue<Job>> Pending = new();
+    private static readonly HashSet<NetworkedObject> Skipped = new();
     private static readonly List<Player> Finished = new();
     private static CoroutineHandle _handle;
 
@@ -68,6 +69,16 @@ public static class ClientSideSpawner
                 queue.Enqueue(job);
         }
     }
+    
+    /// <summary>
+    /// Prevents a queued object from being spawned.
+    /// </summary>
+    /// <param name="obj">Object to skip.</param>
+    public static void Skip(NetworkedObject obj)
+    {
+        if (Pending.Count > 0)
+            Skipped.Add(obj);
+    }
 
     private static IEnumerator<float> Process()
     {
@@ -91,7 +102,8 @@ public static class ClientSideSpawner
                 while (queue.Count > 0 && Stopwatch.GetTimestamp() < end)
                 {
                     Job job = queue.Dequeue();
-                    job.Obj.Spawn(player);
+                    if (!Skipped.Contains(job.Obj))
+                        job.Obj.Spawn(player);
                     job.OnLast?.Invoke(player);
                 }
 
@@ -105,5 +117,6 @@ public static class ClientSideSpawner
             Finished.Clear();
             yield return Timing.WaitForOneFrame;
         }
+        Skipped.Clear();
     }
 }

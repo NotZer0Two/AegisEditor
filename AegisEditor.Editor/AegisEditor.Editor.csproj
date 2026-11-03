@@ -29,6 +29,7 @@
         <Reference Include="UnityEngine.AssetBundleModule" Private="false" />
         <Reference Include="UnityEngine.AnimationModule" Private="false" />
         <Reference Include="UnityEngine.IMGUIModule" Private="false" />
+        <Reference Include="UnityEngine.AudioModule" Private="false" />
         <Reference Include="System.Core" Private="false" />
     </ItemGroup>
 
