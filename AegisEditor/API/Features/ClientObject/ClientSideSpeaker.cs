@@ -101,7 +101,6 @@ public class ClientSideSpeaker : ClientSideObject
         int total = pcm.Length / 2;
         double targetTime = NetworkTime.time;
         int position = 0;
-        int frames = 0;
 
         while (true)
         {
@@ -156,9 +155,6 @@ public class ClientSideSpeaker : ClientSideObject
                             sent++;
                         return ok;
                     });
-
-                    if (frames++ % 50 == 0)
-                        AegisServerCalls.Log.Invoke($"Speaker {GetId()}: frame {frames}, {length} bytes, {sent} recipients");
                 }
 
                 targetTime += FramePeriod;

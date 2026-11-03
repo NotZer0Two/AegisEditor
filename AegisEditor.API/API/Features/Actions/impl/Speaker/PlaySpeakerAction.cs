@@ -23,7 +23,6 @@ public class PlaySpeakerAction : AegisAction
         if (Speaker == null)
             return;
 
-        bool isok = Speaker.Play(ClipName);
-        AegisServerCalls.Log.Invoke($"Action: speaker {(Speaker == null ? "null" : Speaker.name)}, clip '{ClipName}' {isok}");
+        Speaker.Play(ClipName);
     }
 }
