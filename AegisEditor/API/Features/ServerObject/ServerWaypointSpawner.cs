@@ -32,7 +32,7 @@ public class ServerWaypointSpawner : NetworkedObject, IServerSidedWaypoint
         }
 
         _waypoint.Base.NetworkPriority = source.waypointPriority;
-        _waypoint.Base.NetworkVisualizeBounds = true;
+        _waypoint.Base.NetworkVisualizeBounds = source.visualizeBounds;
         _waypoint.Base.NetworkBoundsSize = source.boundsSize;
         _waypoint.Base.NetworkMovementSmoothing = 30;
         _waypoint.Base.NetworkIsStatic = source.gameObject.isStatic;
