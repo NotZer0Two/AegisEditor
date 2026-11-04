@@ -130,10 +130,26 @@ public class Editor
             }
         };
 
-        BuildPipeline.BuildAssetBundles(outputPath, build, BuildAssetBundleOptions.AssetBundleStripUnityVersion,
-            BuildTarget.StandaloneWindows);
+        if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows))
+        {
+            Debug.LogError("Bundle build aborted: the 'Windows Build Support (Mono)' module is not installed for this Unity editor. " +
+                           "Install it via Unity Hub > Installs > (gear icon on your editor version) > Add modules, then restart the editor and try again.");
+            return;
+        }
 
+        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(outputPath, build,
+            BuildAssetBundleOptions.AssetBundleStripUnityVersion, BuildTarget.StandaloneWindows);
+
+        if (manifest == null)
+        {
+            Debug.LogError($"Bundle build failed: BuildAssetBundles returned null for bundle '{bundleName}' (output: '{System.IO.Path.GetFullPath(outputPath)}', assets: {assetNames.Count}). " +
+                           "Unity logged the underlying cause in the editor log, located at '%LOCALAPPDATA%\\Unity\\Editor\\Editor.log'. " +
+                           "Search for the lines after 'Starting build of bundle' and include them when reporting this issue.");
+            return;
+        }
+        
         Debug.Log($"<color=lime>Build of bundle <color=orange>{bundleName}</color> complete!</color>");
+        Debug.Log($"saved at {outputPath}");
 
         AssetDatabase.DeleteAsset(TempFolder);
     }
