@@ -13,6 +13,8 @@ namespace AegisEditor.API.Features.Spawnable;
 [RequireComponent(typeof(Collider))]
 public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
 {
+    private static readonly List<AegisTriggerTeleport> _instances = new();
+
     private readonly HashSet<GameObject> _ignored = new();
     private readonly Dictionary<GameObject, int> _inside = new();
     private readonly Dictionary<GameObject, Coroutine> _pending = new();
@@ -21,6 +23,21 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     private GameObject _destination;
 
     private AegisTriggerTeleport? _next;
+
+    /// <summary>
+    /// Every active teleporter that has been registered.
+    /// </summary>
+    public static IReadOnlyList<AegisTriggerTeleport> Instances => _instances;
+
+    /// <summary>
+    /// Optional identifier used to find this teleporter at runtime.
+    /// </summary>
+    public string id;
+
+    /// <summary>
+    /// Optional id of the teleporter to teleport to. Only used when <see cref="destination"/> is not set.
+    /// </summary>
+    public string destinationId;
 
     /// <summary>
     /// The object to teleport to. Must have the same geometry as this object.
@@ -62,6 +79,45 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     public IEnumerable<Component> KeptComponents => GetComponents<Collider>();
 
     /// <summary>
+    /// Gets the first teleporter with the given id.
+    /// </summary>
+    /// <param name="id">The id to look for.</param>
+    /// <param name="teleporter">The teleporter found, if any.</param>
+    /// <returns>If a teleporter was found.</returns>
+    public static bool TryGet(string id, out AegisTriggerTeleport teleporter)
+    {
+        teleporter = null;
+
+        if (string.IsNullOrEmpty(id))
+            return false;
+
+        foreach (AegisTriggerTeleport instance in _instances)
+        {
+            if (instance.id == id)
+            {
+                teleporter = instance;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gets every teleporter with the given id.
+    /// </summary>
+    /// <param name="id">The id to look for.</param>
+    /// <returns>The teleporters found.</returns>
+    public static IEnumerable<AegisTriggerTeleport> GetAll(string id)
+    {
+        foreach (AegisTriggerTeleport instance in _instances)
+        {
+            if (instance.id == id)
+                yield return instance;
+        }
+    }
+
+    /// <summary>
     /// Replaces the allowed roles at runtime. An empty collection allows everything.
     /// </summary>
     /// <param name="roles">The roles allowed to teleport.</param>
@@ -71,7 +127,13 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
         allowedRoles.AddRange(roles);
     }
 
-    private void Awake() => destination = _destination;
+    private void Awake()
+    {
+        destination = _destination;
+        _instances.Add(this);
+    }
+
+    private void OnDestroy() => _instances.Remove(this);
 
     private void OnTriggerEnter(Collider other)
     {
@@ -83,7 +145,7 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
         if (count > 0)
             return;
 
-        if (destination == null || _ignored.Contains(target) || !IsAllowed(target))
+        if (_ignored.Contains(target) || !IsAllowed(target) || !ResolveDestination())
             return;
 
         if (delay <= 0f)
@@ -125,6 +187,17 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     private static GameObject GetTarget(Collider other)
     {
         return other.attachedRigidbody != null ? other.attachedRigidbody.gameObject : other.gameObject;
+    }
+
+    private bool ResolveDestination()
+    {
+        if (destination != null)
+            return true;
+
+        if (TryGet(destinationId, out AegisTriggerTeleport found) && found != this)
+            destination = found.gameObject;
+
+        return destination != null;
     }
 
     private bool IsAllowed(GameObject target)
