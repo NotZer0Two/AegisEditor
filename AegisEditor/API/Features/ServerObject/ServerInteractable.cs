@@ -22,7 +22,7 @@ public class ServerInteractable : NetworkedObject
     public ServerInteractable(AegisInteractable source)
     {
         _source = source;
-        _toy = InteractableToy.Create(source.Position, Quaternion.Euler(source.Rotation), source.Scale, null, false);
+        _toy = InteractableToy.Create(source.Position, Quaternion.Euler(source.Rotation), source.Scale, null);
 
         if (_toy is null)
         {

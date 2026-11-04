@@ -340,6 +340,14 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
     /// <param name="scale">Scale to send.</param>
     public void GetClientTransform(out Vector3 position, out Quaternion rotation, out Vector3 scale)
     {
+        if (ClientParent is AegisCullingParent culling)
+        {
+            position = toUpdate.position - culling.boundsCollider.bounds.center;
+            rotation = toUpdate.rotation;
+            scale = toUpdate.lossyScale;
+            return;
+        }
+
         Transform parent = ClientSpaceParent;
 
         if (parent == null)
