@@ -14,6 +14,7 @@ public class AegisText : AegisSpawnable, INetworked, IPreCheckUseless
 {
     private string _lastText;
     private Vector2 _lastSize;
+    private Vector2 _appliedSize;
     
     /// <inheritdoc />
     public override SpawnableType Type => SpawnableType.Text;
@@ -38,23 +39,24 @@ public class AegisText : AegisSpawnable, INetworked, IPreCheckUseless
     {
         if (!Application.isEditor)
             return;
-        
-        if (text != _lastText)
+
+        if (text != _lastText && textMesh != null)
+            textMesh.text = text;
+
+        if (textMesh == null)
+            return;
+
+        Vector2 rectSize = textMesh.rectTransform.sizeDelta;
+
+        if (displaySize != _appliedSize)
         {
-            if (textMesh != null)
-            {
-                textMesh.text = text;
-            }
-            
-            _lastText = text;
+            textMesh.rectTransform.sizeDelta = displaySize;
+            _appliedSize = displaySize;
         }
-        
-        if (displaySize != _lastSize) 
+        else if (rectSize != _appliedSize)
         {
-            if (textMesh != null)
-                textMesh.rectTransform.sizeDelta = displaySize;
-            
-            _lastSize = displaySize;
+            displaySize = rectSize;
+            _appliedSize = rectSize;
         }
     }
     
@@ -94,18 +96,27 @@ public class AegisText : AegisSpawnable, INetworked, IPreCheckUseless
         textMesh = this.GetComponentOrCreate<TextMeshPro>();
 
         textMesh.hideFlags = HideFlags.HideInInspector;
-        textMesh.rectTransform.hideFlags = HideFlags.HideInInspector;
 
         var meshRenderer = textMesh.GetComponent<MeshRenderer>();
-        if (meshRenderer != null) meshRenderer.hideFlags = HideFlags.HideInInspector;
+        if (meshRenderer != null)
+        {
+            meshRenderer.hideFlags = HideFlags.HideInInspector;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+        }
 
         var meshFilter = textMesh.GetComponent<MeshFilter>();
         if (meshFilter != null) meshFilter.hideFlags = HideFlags.HideInInspector;
 
         textMesh.text = text;
+        textMesh.fontSize = 9f;
         textMesh.enableAutoSizing = false;
-        textMesh.margin = Vector4.zero;
+        textMesh.enableWordWrapping = true;
+        textMesh.overflowMode = TextOverflowModes.Overflow;
+        textMesh.richText = true;
+        textMesh.color = Color.white;
         textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.margin = Vector4.zero;
         textMesh.rectTransform.sizeDelta = displaySize;
     }
     

@@ -245,8 +245,13 @@ public sealed class MERImporter : Importer<SchematicObjectDataList>
             if (block.Properties.TryGetValue("Text", out object value))
                 text.text = value.ToString();
 
-            if (block.Properties.TryGetValue("DisplaySize", out object size) && TryParseFloats(size, 2, out float[] v))
-                text.displaySize = new Vector2(v[0], v[1]);
+            if (block.Properties.TryGetValue("DisplaySize", out object size))
+            {
+                if (TryParseFloats(size, 2, out float[] v))
+                    text.displaySize = new Vector2(v[0], v[1]);
+                else
+                    text.displaySize = JsonConvert.DeserializeObject<Vector2>(size.ToString());
+            }
         }
 
         context.TryAddAnimator(text.gameObject, block.AnimatorName);
