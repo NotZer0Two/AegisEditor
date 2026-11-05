@@ -35,11 +35,15 @@ public static class EventManager
     public static void InvokeEvent<TEventArgs>(this Action<TEventArgs>? eventHandler, TEventArgs args)
         where TEventArgs : EventArgs
     {
+        #if DEBUG
+            Logger.Debug($"Invoked event {typeof(TEventArgs).Name}, subscribers: {eventHandler?.GetInvocationList().Length ?? 0}");
+        #endif
+        
         if (eventHandler is null)
         {
             return;
         }
-
+        
         foreach (Action<TEventArgs> sub in eventHandler.GetInvocationList())
         {
             Run(sub, () => sub(args));
