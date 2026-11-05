@@ -61,6 +61,8 @@ public static class ClientSideRegistry
         AegisAPI.BundleLoaded += Track;
         AegisAPI.SpawnableDestroyed += OnSpawnableDestroyed;
 
+        AegisAPI.LoadedBundles[BundleInfo.Runtime.Name] = BundleInfo.Runtime;
+        
         foreach (BundleInfo bundle in AegisAPI.LoadedBundles.Values)
             Track(bundle);
     }
