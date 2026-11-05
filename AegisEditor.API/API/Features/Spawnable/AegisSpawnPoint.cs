@@ -23,6 +23,13 @@ public class AegisSpawnPoint : AegisSpawnable
     
     public float chance = 10f;
     
+    private void Awake()
+    {
+        _instances.Add(this);
+    }
+
+    private void OnDestroy() => _instances.Remove(this);
+    
     private void OnDrawGizmos()
     {
         if (Application.isPlaying)
