@@ -59,7 +59,7 @@ public sealed class FileMode : ToolGunMode
 
         ToolGunSession session = context.Session;
         string message = MapStorage.Load(name, session.HasSelection ? session.Placed : null, context.Room,
-            out PlacedPrefab placed);
+            context.Player.Position, out PlacedPrefab placed);
 
         if (placed != null)
             session.Select(placed, null);

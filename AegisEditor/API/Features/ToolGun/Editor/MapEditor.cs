@@ -154,8 +154,7 @@ public static class MapEditor
     /// <summary>
     /// Applies a save file. A schematic is spawned in a room of its type (the preferred room if it matches), an edit goes to the selected prefab if it matches, else to a spawned one, else the prefab is spawned from its bundle.
     /// </summary>
-    public static PlacedPrefab Load(SchematicData data, PlacedPrefab selected, RoomIdentifier preferred,
-        out string message)
+    public static PlacedPrefab Load(SchematicData data, PlacedPrefab selected, RoomIdentifier preferred, Vector3 near, out string message)
     {
         string name = $"{data.Bundle}/{data.Prefab}";
         PlacedPrefab target = null;
@@ -173,7 +172,7 @@ public static class MapEditor
             {
                 room = preferred != null && RoomLookupExtensions.GetRoomType(preferred.gameObject.name) == type
                     ? preferred
-                    : type.FindRoom();
+                    : type.FindRoom(near);
 
                 if (room == null)
                 {
@@ -195,8 +194,7 @@ public static class MapEditor
 
             message = target == null
                 ? $"Could not spawn {name}, is the bundle loaded?"
-                : data.Kind == SchematicData.KindSchematic
-                    ? $"Spawned schematic {name}{(room != null ? $" in {data.Room}" : string.Empty)}."
+                : data.Kind == SchematicData.KindSchematic ? $"Spawned schematic {name} in {Where(target)}."
                     : $"Spawned {name} and applied the edit.";
 
             return target;
@@ -599,4 +597,9 @@ public static class MapEditor
 
         placed.Data.SetTransform(position, rotation, scale);
     }
+    
+    public static string Where(PlacedPrefab placed) =>
+        placed.Room == null
+            ? "the world"
+            : $"{placed.Data.Room} at {MemberAccessor.Format(placed.Room.transform.position)}, facing {MemberAccessor.Format(placed.Room.transform.eulerAngles)}";
 }

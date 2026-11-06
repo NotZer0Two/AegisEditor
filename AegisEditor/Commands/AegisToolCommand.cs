@@ -100,7 +100,7 @@ public class AegisToolCommand : ICommand
 
         ToolGunManager.GetSession(player).Select(placed, null);
         string room = placed.Data.Room == "Unknown" ? "world position" : $"room {placed.Data.Room}";
-        return $"Created {placed.Name} ({room}). Add objects with: aegistool add <Type>";
+        return $"Created {placed.Name} in {MapEditor.Where(placed)}. Add objects with: aegistool add <Type>";
     }
 
     private static string Select(Player player, string[] args)
@@ -208,7 +208,7 @@ public class AegisToolCommand : ICommand
             throw new InvalidOperationException("Usage: aegistool load <name>  (aegistool files lists them)");
 
         ToolGunSession session = ToolGunManager.GetSession(player);
-        string message = MapStorage.Load(args[0], session.HasSelection ? session.Placed : null, RoomOf(player), out PlacedPrefab placed);
+        string message = MapStorage.Load(args[0], session.HasSelection ? session.Placed : null, RoomOf(player), player.Position, out PlacedPrefab placed);
 
         if (placed != null)
             session.Select(placed, null);

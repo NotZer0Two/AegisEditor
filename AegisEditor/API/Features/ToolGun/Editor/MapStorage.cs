@@ -39,14 +39,14 @@ public static class MapStorage
         return $"Saved {data.Kind} \"{name}\": {data.Objects.Count} objects, {data.Edits.Count} edits{(data.Moved ? ", moved" : string.Empty)}.\n{path}";
     }
 
-    public static string Load(string name, PlacedPrefab selected, RoomIdentifier preferred, out PlacedPrefab result)
+    public static string Load(string name, PlacedPrefab selected, RoomIdentifier preferred, Vector3 near, out PlacedPrefab result)
     {
         string path = PathOf(name);
 
         if (!File.Exists(path))
             throw new InvalidOperationException($"File \"{name}\" not found. Use aegistool files.");
 
-        result = MapEditor.Load(Read(path), selected, preferred, out string message);
+        result = MapEditor.Load(Read(path), selected, preferred, near, out string message);
         return message;
     }
 
