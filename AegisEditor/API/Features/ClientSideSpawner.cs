@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using AegisEditor.Events.EventsArgs.Spawner;
-using AegisEditor.Events.Handlers;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -14,7 +12,8 @@ namespace AegisEditor.API.Features;
 /// </summary>
 public static class ClientSideSpawner
 {
-    private readonly record struct Job(List<NetworkedObject> Batch, NetworkedObject Obj, bool IsLast, Action<Player> OnLast);    
+    private readonly record struct Job(List<NetworkedObject> Batch, NetworkedObject Obj, Action<Player> OnLast);
+    
     public static double BudgetMs = 2.0;
 
     private static readonly Dictionary<Player, Queue<Job>> Pending = new();
@@ -30,15 +29,8 @@ public static class ClientSideSpawner
     /// <param name="onComplete">Action to call when completed.</param>
     public static void Enqueue(Player player, List<NetworkedObject> objects, Action<Player> onComplete = null)
     {
-        EnqueuingSpawnEventArgs enqueuing = new(player, objects);
-        SpawnerEventsHandler.OnEnqueuing(enqueuing);
-
-        if (!enqueuing.IsAllowed)
-            return;
-
         if (objects.Count == 0)
         {
-            SpawnerEventsHandler.OnCompleted(new SpawnCompletedEventArgs(player, objects));
             onComplete?.Invoke(player);
             return;
         }
@@ -47,10 +39,7 @@ public static class ClientSideSpawner
             Pending[player] = queue = new Queue<Job>(objects.Count);
 
         for (int i = 0; i < objects.Count; i++)
-        {
-            bool last = i == objects.Count - 1;
-            queue.Enqueue(new Job(objects, objects[i], last, last ? onComplete : null));
-        }
+            queue.Enqueue(new Job(objects, objects[i], i == objects.Count - 1 ? onComplete : null));
 
         if (!_handle.IsRunning)
             _handle = Timing.RunCoroutine(Process(), Segment.Update);
@@ -60,17 +49,7 @@ public static class ClientSideSpawner
     /// Cancel the player form the list of Spawning.
     /// </summary>
     /// <param name="player"></param>
-    public static void Cancel(Player player)
-    {
-        if (!Pending.ContainsKey(player))
-            return;
-
-        CancellingSpawnEventArgs ev = new(player, null);
-        SpawnerEventsHandler.OnCancelling(ev);
-
-        if (ev.IsAllowed)
-            Pending.Remove(player);
-    }
+    public static void Cancel(Player player) => Pending.Remove(player);
     
     /// <summary>
     /// Delets a specific job from the player.
@@ -80,12 +59,6 @@ public static class ClientSideSpawner
     public static void Cancel(Player player, List<NetworkedObject> batch)
     {
         if (!Pending.TryGetValue(player, out Queue<Job> queue))
-            return;
-
-        CancellingSpawnEventArgs ev = new(player, batch);
-        SpawnerEventsHandler.OnCancelling(ev);
-
-        if (!ev.IsAllowed)
             return;
 
         int count = queue.Count;
@@ -103,13 +76,7 @@ public static class ClientSideSpawner
     /// <param name="obj">Object to skip.</param>
     public static void Skip(NetworkedObject obj)
     {
-        if (Pending.Count == 0)
-            return;
-
-        SkippingObjectEventArgs ev = new(obj);
-        SpawnerEventsHandler.OnSkipping(ev);
-
-        if (ev.IsAllowed)
+        if (Pending.Count > 0)
             Skipped.Add(obj);
     }
 
@@ -135,24 +102,9 @@ public static class ClientSideSpawner
                 while (queue.Count > 0 && Stopwatch.GetTimestamp() < end)
                 {
                     Job job = queue.Dequeue();
-
                     if (!Skipped.Contains(job.Obj))
-                    {
-                        SpawningObjectEventArgs spawning = new(player, job.Obj);
-                        SpawnerEventsHandler.OnSpawningObject(spawning);
-
-                        if (spawning.IsAllowed)
-                        {
-                            job.Obj.Spawn(player);
-                            SpawnerEventsHandler.OnSpawnedObject(new SpawnedObjectEventArgs(player, job.Obj));
-                        }
-                    }
-
-                    if (job.IsLast)
-                    {
-                        SpawnerEventsHandler.OnCompleted(new SpawnCompletedEventArgs(player, job.Batch));
-                        job.OnLast?.Invoke(player);
-                    }
+                        job.Obj.Spawn(player);
+                    job.OnLast?.Invoke(player);
                 }
 
                 if (queue.Count == 0)

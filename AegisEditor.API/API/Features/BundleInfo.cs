@@ -10,8 +10,6 @@ namespace AegisEditor.API.Features;
 /// </summary>
 public class BundleInfo(AssetBundle bundle, string path, string name)
 {
-    public static BundleInfo Runtime { get; } = new(null, null, "Runtime");
-    
     /// <summary>
     /// Gets invoked when bundle is reloaded.
     /// </summary>
@@ -40,18 +38,13 @@ public class BundleInfo(AssetBundle bundle, string path, string name)
     /// <summary>
     /// All prefabs inside asset bundle.
     /// </summary>
-    public string[] Prefabs => Base != null ? Base.GetAllAssetNames() : Array.Empty<string>();
+    public string[] Prefabs => Base.GetAllAssetNames();
     
     /// <summary>
     /// A dictionary that stores instances of prefabs, mapping a unique identifier (an integer) 
     /// to its corresponding <see cref="PrefabInfo"/> object.
     /// </summary>
     public Dictionary<int, PrefabInfo> PrefabInstances { get; set; } = new Dictionary<int, PrefabInfo>();
-    
-    /// <summary>
-    /// If this bundle has no asset bundle behind it and holds only code-built prefabs.
-    /// </summary>
-    public bool IsRuntime => Path == null;
     
     /// <summary>
     /// Creates a prefab.
@@ -84,9 +77,6 @@ public class BundleInfo(AssetBundle bundle, string path, string name)
     /// <returns>If it was reloaded or not.</returns>
     public bool Reload()
     {
-        if (IsRuntime) 
-            return false;
-        
         foreach(PrefabInfo prefab in PrefabInstances.Values)
         {
             prefab.Despawn();
@@ -137,18 +127,5 @@ public class BundleInfo(AssetBundle bundle, string path, string name)
         }
         
         return 0;
-    }
-    
-    /// <summary>
-    /// Registers a prefab built from code in this bundle, without loading it from an asset bundle.
-    /// </summary>
-    /// <param name="name">Name of the prefab.</param>
-    /// <param name="template">Inactive object that gets instantiated every time the prefab spawns. Destroyed when the prefab is unloaded.</param>
-    /// <returns>The new <see cref="PrefabInfo"/>, not spawned yet.</returns>
-    public PrefabInfo CreateRuntimePrefab(string name, GameObject template)
-    {
-        PrefabInfo info = new(GetFreeId(), this, name) { Template = template };
-        PrefabInstances.Add(info.Id, info);
-        return info;
     }
 }
