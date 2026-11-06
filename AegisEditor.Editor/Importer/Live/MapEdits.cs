@@ -23,9 +23,9 @@ internal static class MapEdits
 
         foreach (SchematicObject add in data.Objects)
         {
-            Transform parent = SpawnablePath.FindTransform(root, add.Parent);
-            Component created = parent == null ? null : create(add.Type, parent);
-
+            Transform parent = SpawnablePath.FindTransform(root, add.Parent) ?? root;
+            Component created = create(add.Type, parent);
+            
             if (created == null)
             {
                 Debug.LogWarning($"[Live map] {label}: could not add {add.Type} to '{add.Parent}'.");

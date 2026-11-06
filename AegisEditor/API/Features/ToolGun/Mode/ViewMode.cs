@@ -22,6 +22,7 @@ public sealed class ViewMode : ToolGunMode
     }
 
     public override string GetHint(ToolGunContext context) =>
-        $"Boxes: {(context.Session.Overlay.Enabled ? "on" : "off")}, radius {context.Session.Overlay.Radius}m. "
-        + "Cyan = live, orange = server (rebuild), yellow = aimed";
+        context.Session.Overlay.Enabled
+            ? $"Boxes on, radius {context.Session.Overlay.Radius}m. Cyan = live, orange = server (rebuild), yellow = aimed"
+            : "Boxes off: everything is hidden except the schematic";
 }

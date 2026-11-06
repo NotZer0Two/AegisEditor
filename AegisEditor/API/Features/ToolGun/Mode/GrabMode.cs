@@ -39,7 +39,7 @@ public sealed class GrabMode : ToolGunMode
 
     public override void OnTick(ToolGunContext context)
     {
-        if (context.Session.Grabbing && context.Session.Handle != null)
+        if (context.Session.Visible && context.Session.Grabbing && context.Session.Handle != null)
             context.Session.Handle.MoveTo(GrabPoint(context));
     }
 

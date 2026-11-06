@@ -27,6 +27,8 @@ public sealed class ToolGunSession(Player player)
     public float GrabDistance { get; set; }
 
     public bool HasSelection => Placed != null && Placed.Prefab.IsSpawned;
+    
+    public bool Visible => Overlay.Enabled;
 
     public AegisSpawnable Target => HasSelection && Key != null ? Placed.Find(Key) : null;
 
@@ -46,6 +48,9 @@ public sealed class ToolGunSession(Player player)
         Key = spawnable == null ? null : SpawnablePath.Get(placed.Prefab, spawnable);
         Measure(out Vector3 center, out Quaternion rotation, out Vector3 size, out Color color);
         Handle = new SelectionHandle(Player, color, center, rotation, size);
+        
+        if (!Visible)
+            Handle.Hide();
     }
 
     public void Deselect()
@@ -59,7 +64,7 @@ public sealed class ToolGunSession(Player player)
 
     public void SetHover(AegisSpawnable target)
     {
-        if (target == null)
+        if (target == null || !Visible)
         {
             HoverHandle?.Hide();
             return;
@@ -98,6 +103,12 @@ public sealed class ToolGunSession(Player player)
             return;
         }
 
+        if (!Visible)
+        {
+            Handle.Hide();
+            return;
+        }
+        
         Measure(out Vector3 center, out Quaternion rotation, out Vector3 size, out _);
         Handle.Update(center, rotation, size);
     }

@@ -55,19 +55,40 @@ public static class ImporterRegistry
 
 internal static class ImportMenu
 {
-    [MenuItem(Editor.Path + "/Import...", false, 50)]
-    private static void ImportOne()
+    [MenuItem(Editor.Path + "/Import File...", false, 50)]
+    private static void ImportFile()
     {
-        string path = EditorUtility.OpenFolderPanel("Select what to import", Application.dataPath, "");
+        string path = EditorUtility.OpenFilePanel(
+            "Select file to import",
+            Application.dataPath,
+            ""
+        );
 
         if (!string.IsNullOrEmpty(path))
             ImporterRegistry.Import(path, true);
     }
 
-    [MenuItem(Editor.Path + "/Import (Multiple)...", false, 51)]
+    [MenuItem(Editor.Path + "/Import Folder...", false, 51)]
+    private static void ImportFolder()
+    {
+        string path = EditorUtility.OpenFolderPanel(
+            "Select folder to import",
+            Application.dataPath,
+            ""
+        );
+
+        if (!string.IsNullOrEmpty(path))
+            ImporterRegistry.Import(path, true);
+    }
+
+    [MenuItem(Editor.Path + "/Import (Multiple)...", false, 52)]
     private static void ImportMultiple()
     {
-        string root = EditorUtility.OpenFolderPanel("Select root folder", Application.dataPath, "");
+        string root = EditorUtility.OpenFolderPanel(
+            "Select root folder",
+            Application.dataPath,
+            ""
+        );
 
         if (!string.IsNullOrEmpty(root))
             ImporterRegistry.ImportMany(root);
