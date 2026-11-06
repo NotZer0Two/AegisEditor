@@ -515,6 +515,15 @@ public static class MapEditor
         placed.Data.Edits.RemoveAll(e => e.Path == key && e.Member == member);
         placed.Data.Edits.Add(new SchematicEdit { Path = key, Member = member, Value = value });
     }
+    
+    public static void Purge()
+    {
+        foreach (PlacedPrefab placed in Records.Values.Where(p => !p.Prefab.IsSpawned).ToArray())
+        {
+            Records.Remove(placed.Prefab);
+            placed.Prefab.Unload();
+        }
+    }
 
     private static void OnInstantiated(PrefabInfo prefab)
     {

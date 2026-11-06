@@ -199,6 +199,20 @@ public class AegisPlugin : Plugin<AegisConfig>
     {
         Timing.CallDelayed(1.5f, () =>
         {
+            MapEditor.Purge();
+
+            foreach (string name in AegisPlugin.Instance.Config.AutoMaps)
+            {
+                try
+                {
+                    Logger.Info($"[AutoMaps] {MapStorage.Load(name, null, null, Vector3.zero, out _)}");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"[AutoMaps] \"{name}\": {e.Message}");
+                }
+            }
+            
             foreach (AutoSpawnEntry entry in Config.AutoSpawns)
             {
                 if (!AegisAPI.TryLoadBundle(entry.Bundle, out BundleInfo bundle) || !bundle.Base.Contains(entry.Prefab))
