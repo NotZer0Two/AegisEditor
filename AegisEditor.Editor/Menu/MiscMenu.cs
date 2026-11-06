@@ -44,6 +44,18 @@ public static class MiscMenu
 
     [MenuItem(Editor.Path + Path + "Teleport")]
     private static void OnCreateTeleport() => BundleExtensions.GetBundle()?.AddTeleport(Selection.activeTransform);
+    
+    [MenuItem(Editor.Path + Path + "Decal")]
+    private static void OnCreateDecal() => BundleExtensions.GetBundle()?.AddDecal(Selection.activeTransform);
+    
+    [MenuItem(Editor.Path + Path + "Hazard")]
+    private static void OnCreateHazard() => BundleExtensions.GetBundle()?.AddHazard(Selection.activeTransform);
+    
+    [MenuItem(Editor.Path + Path + "Ragdoll")]
+    private static void OnCreateRagdoll() => BundleExtensions.GetBundle()?.AddRagdoll(Selection.activeTransform);
+    
+    [MenuItem(Editor.Path + Path + "SpawnPoint")]
+    private static void OnCreateSpawnPoint() => BundleExtensions.GetBundle()?.AddSpawnPoint(Selection.activeTransform);
 
     [MenuItem(Editor.Path + "/Spawnables", true)]
     private static bool OnPrimitiveValidation() => BundleExtensions.GetBundle() != null;

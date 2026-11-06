@@ -41,6 +41,7 @@ public static class ClientSideRegistry
         [typeof(AegisLight)] = s => new ClientSideLight(((AegisLight)s)),
         [typeof(AegisText)] = s => new ClientSideText(((AegisText)s)),
         [typeof(AegisSpeaker)] = s => new ClientSideSpeaker(((AegisSpeaker)s)),
+        [typeof(AegisDecals)] = s => new ClientSideDecal(((AegisDecals)s)),
 
         [typeof(AegisCapybara)] = s => new ClientSideCapybara((AegisCapybara)s),
 
@@ -51,6 +52,8 @@ public static class ClientSideRegistry
         [typeof(AegisCamera)] = s => new ServerCameraSpawner((AegisCamera)s),
         [typeof(AegisLocker)] = s => new ServerLockerSpawner((AegisLocker)s),
         [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
+        [typeof(AegisHazard)] = s => new ServerHazardSpawner(((AegisHazard)s)),
+        [typeof(AegisRagdollSpawner)] = s => new ServerRagdollSpawner(((AegisRagdollSpawner)s)),
     };
 
     /// <summary>
