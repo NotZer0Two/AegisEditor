@@ -14,6 +14,7 @@ using AegisEditor.API.Struct;
 using AegisEditor.Updaters;
 using HarmonyLib;
 using Interactables.Interobjects;
+using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
@@ -29,6 +30,7 @@ using PlayerRoles.FirstPersonControl;
 using RemoteAdmin;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
+using Random = UnityEngine.Random;
 
 namespace AegisEditor;
 
@@ -114,6 +116,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         Harmony.PatchAll();
         
         ServerEvents.WaitingForPlayers += AegisAPI.ServerSpawner.Initialize;
+        PlayerEvents.Spawning += PlayerEventsOnSpawning;
         
         _updaterObject = new GameObject("AegisUpdater");
         UnityEngine.Object.DontDestroyOnLoad(_updaterObject);
@@ -162,6 +165,34 @@ public class AegisPlugin : Plugin<AegisConfig>
         _updaterObject = null;
         Updater = null;
         Instance = null;
+    }
+    
+    private void PlayerEventsOnSpawning(PlayerSpawningEventArgs ev)
+    {
+        if (!ev.UseSpawnPoint)
+            return;
+
+        var role = (SelectableRoles)ev.Role.RoleTypeId;
+        var total = 0f;
+        foreach (var point in AegisSpawnPoint.Instances)
+        {
+            if (point.Role.Contains(role))
+                total += point.chance;
+        }
+
+        var roll = Random.Range(0f, Mathf.Max(total, 100f));
+        foreach (var point in AegisSpawnPoint.Instances)
+        {
+            if (!point.Role.Contains(role))
+                continue;
+
+            roll -= point.chance;
+            if (roll > 0f)
+                continue;
+
+            ev.SpawnLocation = point.transform.position;
+            return;
+        }
     }
 
     private void OnMapGenerated(MapGeneratedEventArgs ev)
