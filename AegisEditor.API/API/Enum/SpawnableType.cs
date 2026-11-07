@@ -11,7 +11,6 @@ public enum SpawnableType : byte
     Culling,
     Text,
     Speaker,
-    Decal,
     
     Capybara,
     
@@ -22,7 +21,4 @@ public enum SpawnableType : byte
     Camera,
     Locker,
     Interactable,
-    Hazard,
-    Ragdoll,
-    Spawnpoint,
 }

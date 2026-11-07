@@ -6,9 +6,6 @@ using AegisEditor.API.Features;
 using AegisEditor.API.Features.ServerSided;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces;
-using AegisEditor.Events.EventsArgs;
-using AegisEditor.Events.EventsArgs.ObjectUpdater;
-using AegisEditor.Events.Handlers;
 using LabApi.Features.Wrappers;
 using Mirror;
 using UnityEngine;
@@ -46,19 +43,13 @@ public class PlayerObjectUpdater : ObjectUpdater
     /// Gets the players that receive updates of the prefab. Read only, use <see cref="AddReceiver"/> and <see cref="RemoveReceiver"/> to change it.
     /// </summary>
     public IReadOnlyList<Player> GetReceivers(PrefabInfo prefab) =>
-        _receivers.GetValueOrDefault(prefab, Empty);
+        _receivers.TryGetValue(prefab, out List<Player> players) ? players : Empty;
 
     /// <summary>
     /// Adds a player to the prefab's receivers and spawns its client-side objects for them.
     /// </summary>
     public bool AddReceiver(PrefabInfo prefab, Player player)
     {
-        AddingReceiverEventArgs adding = new(prefab, player);
-        ObjectUpdaterEventsHandler.OnAddingReceiver(adding);
-
-        if (!adding.IsAllowed)
-            return false;
-
         if (!_receivers.TryGetValue(prefab, out List<Player> players))
         {
             _receivers.Add(prefab, players = new List<Player>());
@@ -71,7 +62,6 @@ public class PlayerObjectUpdater : ObjectUpdater
         players.Add(player);
         _lastYaw.Remove(player);
         ClientSideRegistry.SpawnFor(prefab, player);
-        ObjectUpdaterEventsHandler.OnAddedReceiver(new AddedReceiverEventArgs(prefab, player));
         return true;
     }
 
@@ -80,19 +70,11 @@ public class PlayerObjectUpdater : ObjectUpdater
     /// </summary>
     public bool RemoveReceiver(PrefabInfo prefab, Player player)
     {
-        if (!_receivers.TryGetValue(prefab, out List<Player> players) || !players.Contains(player))
+        if (!_receivers.TryGetValue(prefab, out List<Player> players) || !players.Remove(player))
             return false;
 
-        RemovingReceiverEventArgs removing = new(prefab, player);
-        ObjectUpdaterEventsHandler.OnRemovingReceiver(removing);
-
-        if (!removing.IsAllowed)
-            return false;
-
-        players.Remove(player);
         _lastYaw.Remove(player);
         ClientSideRegistry.DestroyFor(prefab, player);
-        ObjectUpdaterEventsHandler.OnRemovedReceiver(new RemovedReceiverEventArgs(prefab, player));
         return true;
     }
 
@@ -215,16 +197,8 @@ public class PlayerObjectUpdater : ObjectUpdater
                 player.SendFakeSyncVar(networked.NetID, type, "NetworkIsStatic", false);
                 player.SendChangeParent(networked.NetID, parentId);
             }
-            
-            UpdatingObjectEventArgs ev = new(player, spawnable, changes);
-            ObjectUpdaterEventsHandler.OnUpdating(ev);
 
-            if (!ev.IsAllowed)
-            {
-                continue;
-            }
-
-            List<(PropertyUpdate propertyName, object value)> send = ev.Updates;
+            List<(PropertyUpdate propertyName, object value)> send = changes;
 
             if (billboard)
             {

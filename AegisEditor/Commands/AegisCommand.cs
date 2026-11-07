@@ -42,8 +42,6 @@ public class AegisCommand : ParentCommand
         RegisterCommand(new HierarchyCommand());
         RegisterCommand(new ReparentTestCommand());
         RegisterCommand(new AttachTestCommand());
-        
-        RegisterCommand(new TestCommand());
         #endif
     }
 

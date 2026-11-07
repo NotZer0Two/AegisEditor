@@ -14,7 +14,6 @@ using AegisEditor.API.Struct;
 using AegisEditor.Updaters;
 using HarmonyLib;
 using Interactables.Interobjects;
-using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
@@ -30,7 +29,6 @@ using PlayerRoles.FirstPersonControl;
 using RemoteAdmin;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
-using Random = UnityEngine.Random;
 
 namespace AegisEditor;
 
@@ -129,7 +127,6 @@ public class AegisPlugin : Plugin<AegisConfig>
         ServerEvents.MapGenerated += OnMapGenerated;
         ServerEvents.RoundRestarted += DespawnAutoSpawnedPrefabs;
         ServerEvents.RoundEnded += ev => DespawnAutoSpawnedPrefabs();
-        PlayerEvents.Spawning += PlayerEventsOnSpawning;
         
         if (Config.DespawnOnRoundRestart)
             ServerEvents.RoundRestarted += AegisSchematic.DespawnAll;
@@ -146,34 +143,6 @@ public class AegisPlugin : Plugin<AegisConfig>
         
         ToolGunManager.Enable();
         CustomHandlersManager.RegisterEventsHandler(_toolGunEvents);
-    }
-
-    private void PlayerEventsOnSpawning(PlayerSpawningEventArgs ev)
-    {
-        if (!ev.UseSpawnPoint)
-            return;
-
-        var role = (SelectableRoles)ev.Role.RoleTypeId;
-        var total = 0f;
-        foreach (var point in AegisSpawnPoint.Instances)
-        {
-            if (point.Role.Contains(role))
-                total += point.chance;
-        }
-
-        var roll = Random.Range(0f, Mathf.Max(total, 100f));
-        foreach (var point in AegisSpawnPoint.Instances)
-        {
-            if (!point.Role.Contains(role))
-                continue;
-
-            roll -= point.chance;
-            if (roll > 0f)
-                continue;
-
-            ev.SpawnLocation = point.transform.position;
-            return;
-        }
     }
 
     /// <inheritdoc/>
