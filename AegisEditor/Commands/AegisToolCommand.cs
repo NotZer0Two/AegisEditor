@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AegisEditor.API.Features;
 using AegisEditor.API.Features.ServerSided.Editor;
 using AegisEditor.API.Features.Spawnable;
@@ -49,7 +50,7 @@ public class AegisToolCommand : ICommand
     public string Command => "aegistool";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = ["at"];
+    public string[] Aliases { get; } = ["aet", "toolgun", "aetoolgun"];
 
     /// <inheritdoc />
     public string Description => "Tool gun, schematics, edits, save and load.";
@@ -151,10 +152,10 @@ public class AegisToolCommand : ICommand
 
         List<string> lines = new();
 
-        foreach (string argument in args)
+        foreach (string argument in Tokenize(args))
         {
             int split = argument.IndexOf('=');
-            if (split <= 0 || split == argument.Length - 1)
+            if (split <= 0)
                 throw new InvalidOperationException($"Invalid argument \"{argument}\", use member=value.");
 
             string member = argument.Substring(0, split);
@@ -224,4 +225,42 @@ public class AegisToolCommand : ICommand
     }
     
     private static RoomIdentifier RoomOf(Player player) => player.Room?.Base;
+    
+    private static List<string> Tokenize(string[] args)
+    {
+        List<string> tokens = new();
+        StringBuilder current = new();
+        bool quoted = false;
+        bool started = false;
+    
+        foreach (char c in string.Join(" ", args))
+        {
+            if (c == '"')
+            {
+                quoted = !quoted;
+                started = true;
+                continue;
+            }
+    
+            if (c == ' ' && !quoted)
+            {
+                if (started || current.Length > 0)
+                    tokens.Add(current.ToString());
+    
+                current.Clear();
+                started = false;
+                continue;
+            }
+    
+            current.Append(c);
+        }
+    
+        if (quoted)
+            throw new InvalidOperationException("Missing closing quote.");
+    
+        if (started || current.Length > 0)
+            tokens.Add(current.ToString());
+    
+        return tokens;
+    }
 }

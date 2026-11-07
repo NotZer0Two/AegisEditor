@@ -95,13 +95,14 @@ public sealed class MemberAccessor
     public static bool TryParse(Type type, object current, string text, out object value)
     {
         value = null;
-        text = text.Trim();
 
         if (type == typeof(string))
         {
             value = text;
             return true;
         }
+
+        text = text.Trim();
 
         if (type == typeof(bool))
         {

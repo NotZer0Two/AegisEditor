@@ -65,7 +65,19 @@ public static class ToolGunManager
             settings.AddRange(mode.Settings);
 
         ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
-        ServerSpecificSettingsSync.DefinedSettings = settings.ToArray();
+        if (ServerSpecificSettingsSync.DefinedSettings != null)
+        {
+            ServerSpecificSettingsSync.DefinedSettings =
+            [
+                .. ServerSpecificSettingsSync.DefinedSettings,
+                .. settings
+            ];
+        }
+        else
+        {
+            ServerSpecificSettingsSync.DefinedSettings = settings.ToArray();
+        }
+
         ServerSpecificSettingsSync.SendToPlayersConditionally(hub =>
             hub.inventory.UserInventory.Items.Values.Any(item => ToolGunItem.Items.ContainsKey(item.ItemSerial)));
     }
@@ -119,7 +131,8 @@ public static class ToolGunManager
                     hud = "ERROR: check the server console";
                 }
 
-                player.SendHint(hud, 0.25f);
+                if(hud != string.Empty)
+                    player.SendHint(hud, 0.25f);
             }
         }
     }
