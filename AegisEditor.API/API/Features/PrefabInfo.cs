@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Editor;
@@ -53,6 +54,8 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
     /// Scale of prefab.
     /// </summary>
     public Vector3 Scale { get; set; }
+    
+    internal GameObject Template { get; set; }
 
     /// <summary>
     /// Returns list of spawned sub object from prefab.
@@ -93,7 +96,7 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
 
             if (prefabInstance == null)
             {
-                prefabInstance = ParentBundle.Base.LoadAsset<GameObject>(PrefabName);
+                prefabInstance = Template != null ? Template : ParentBundle.Base.LoadAsset<GameObject>(PrefabName);
                 if (prefabInstance == null)
                     return false;
             }
@@ -103,6 +106,9 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
             Scale = scale;
 
             Object = UnityEngine.Object.Instantiate(prefabInstance, Position, Quaternion.Euler(Rotation));
+            if (Template != null && prefabInstance == Template)
+                Object.SetActive(true);
+            
             Object.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Object.transform.localScale = Scale;
 
@@ -263,5 +269,36 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
     {
         Despawn();
         ParentBundle.PrefabInstances.Remove(Id);
+
+        if (Template != null)
+        {
+            UnityEngine.Object.Destroy(Template);
+            Template = null;
+        }
     }
+    
+    /// <summary>
+    /// Gets the first spawned spawnable of a type.
+    /// </summary>
+    /// <param name="name">Name given when building, any if null.</param>
+    /// <returns>The spawnable, null if not found.</returns>
+    public T Get<T>(string name = null) where T : AegisSpawnable
+    {
+        if (Spawnables == null)
+            return null;
+
+        foreach (AegisSpawnable spawnable in Spawnables)
+        {
+            if (spawnable is T typed && (name == null || spawnable.name == name))
+                return typed;
+        }
+
+        return null;
+    }
+    
+    /// <summary>
+    /// Gets all spawned spawnables of a type.
+    /// </summary>
+    public IEnumerable<T> GetAll<T>() where T : AegisSpawnable =>
+        Spawnables?.OfType<T>() ?? Enumerable.Empty<T>();
 }
