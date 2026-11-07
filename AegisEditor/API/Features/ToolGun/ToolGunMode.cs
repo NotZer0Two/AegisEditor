@@ -11,7 +11,7 @@ namespace AegisEditor.API.Features.ToolGun;
 /// </summary>
 public abstract class ToolGunMode
 {
-    public static IReadOnlyList<ToolGunMode> All { get; } = Discover();
+    public static IReadOnlyList<ToolGunMode> All { get; private set; } = Discover();
 
     public abstract string Name { get; }
 
@@ -58,10 +58,43 @@ public abstract class ToolGunMode
     public virtual string GetHint(ToolGunContext context) => string.Empty;
 
     private static List<ToolGunMode> Discover() =>
-        Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => t.IsSubclassOf(typeof(ToolGunMode)) && !t.IsAbstract)
-            .Select(t => (ToolGunMode)Activator.CreateInstance(t))
+        AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly =>
+            {
+                try
+                {
+                    return assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    return ex.Types.Where(t => t != null);
+                }
+            })
+            .Where(t =>
+                t != null &&
+                t.IsSubclassOf(typeof(ToolGunMode)) &&
+                !t.IsAbstract)
+            .Select(t =>
+            {
+                try
+                {
+                    return (ToolGunMode)Activator.CreateInstance(t);
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .Where(m => m != null)
             .OrderBy(m => m.Order)
             .ThenBy(m => m.Name)
             .ToList();
+    
+    /// <summary>
+    /// Refresh to enable new tool gun modes or if any changes were done
+    /// </summary>
+    public static void Refresh()
+    {
+        All = Discover();
+    }
 }
