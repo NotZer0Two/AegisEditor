@@ -7,6 +7,8 @@ using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features;
 using AegisEditor.API.Features.Spawnable;
+using AegisEditor.API.Features.ToolGun;
+using AegisEditor.API.Features.ToolGun.Events;
 using AegisEditor.API.Public;
 using AegisEditor.API.Struct;
 using AegisEditor.Updaters;
@@ -14,6 +16,7 @@ using HarmonyLib;
 using Interactables.Interobjects;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
+using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
 using LabApi.Features;
 using LabApi.Features.Wrappers;
@@ -94,6 +97,11 @@ public class AegisPlugin : Plugin<AegisConfig>
     /// Gets the updater that manages the updates of all spawnables.
     /// </summary>
     internal static PlayerObjectUpdater? Updater { get; private set; }
+    
+    /// <summary>
+    /// Tool gun events
+    /// </summary>
+    private readonly ToolGunEvents _toolGunEvents = new();
 
     /// <inheritdoc/>
     public override void Enable()
@@ -135,6 +143,9 @@ public class AegisPlugin : Plugin<AegisConfig>
         {
             StaticUnityMethods.OnUpdate += AegisAPI.CheckForFileChanges;
         }
+        
+        ToolGunManager.Enable();
+        CustomHandlersManager.RegisterEventsHandler(_toolGunEvents);
     }
 
     private void PlayerEventsOnSpawning(PlayerSpawningEventArgs ev)
@@ -174,6 +185,9 @@ public class AegisPlugin : Plugin<AegisConfig>
         ServerEvents.RoundRestarted -= DespawnAutoSpawnedPrefabs;
         DespawnAutoSpawnedPrefabs();
 
+        CustomHandlersManager.UnregisterEventsHandler(_toolGunEvents);
+        ToolGunManager.Disable();
+        
         ClientSideRegistry.Disable();
         UnityEngine.Object.Destroy(_updaterObject);
         _updaterObject = null;
@@ -185,6 +199,20 @@ public class AegisPlugin : Plugin<AegisConfig>
     {
         Timing.CallDelayed(1.5f, () =>
         {
+            MapEditor.Purge();
+
+            foreach (string name in AegisPlugin.Instance.Config.AutoMaps)
+            {
+                try
+                {
+                    Logger.Info($"[AutoMaps] {MapStorage.Load(name, null, null, Vector3.zero, out _)}");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"[AutoMaps] \"{name}\": {e.Message}");
+                }
+            }
+            
             foreach (AutoSpawnEntry entry in Config.AutoSpawns)
             {
                 if (!AegisAPI.TryLoadBundle(entry.Bundle, out BundleInfo bundle) || !bundle.Base.Contains(entry.Prefab))

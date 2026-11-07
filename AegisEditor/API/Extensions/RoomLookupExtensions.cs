@@ -62,6 +62,37 @@ public static class RoomLookupExtensions
 
         return matches.Count == 0 ? null : matches[UnityEngine.Random.Range(0, matches.Count)];
     }
+    
+    /// <summary>
+    /// Finds the room of the type closest to a point.
+    /// </summary>
+    /// <param name="type">The room type.</param>
+    /// <param name="near">The point.</param>
+    /// <returns>The room, or null if it isn't spawned.</returns>
+    public static RoomIdentifier? FindRoom(this RoomType type, Vector3 near)
+    {
+        string? name = type.GetRoomName();
+        if (name == null)
+            return null;
+
+        RoomIdentifier? best = null;
+        float distance = float.MaxValue;
+
+        foreach (RoomIdentifier room in RoomIdentifier.AllRoomIdentifiers)
+        {
+            if (Normalize(room.gameObject.name) != name)
+                continue;
+
+            float current = (room.transform.position - near).sqrMagnitude;
+            if (current >= distance)
+                continue;
+
+            distance = current;
+            best = room;
+        }
+
+        return best;
+    }
 
     /// <summary>
     /// Calculates a world pose from a local offset.
