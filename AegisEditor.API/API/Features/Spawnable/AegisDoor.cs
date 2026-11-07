@@ -53,6 +53,9 @@ public class AegisDoor : AegisSpawnable
     public override void InitializeInEditor()
     {
         RefreshVisual();
+
+        SceneVisibilityManager.visibilityChanged -= ApplyVisibility; // avoids double subscribing
+        SceneVisibilityManager.visibilityChanged += ApplyVisibility;
     }
 
     /// <inheritdoc />
@@ -107,6 +110,8 @@ public class AegisDoor : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+        
+        ApplyVisibility();
     }
     
     private void OnDrawGizmos()
@@ -129,5 +134,40 @@ public class AegisDoor : AegisSpawnable
             if (action != null)
                 action.Execute(executor);
         }
+    }
+
+    private void ApplyVisibility()
+    {
+        if (this == null)
+        {
+            SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
+            return;
+        }
+
+        if (_visual == null)
+            return;
+
+        SceneVisibilityManager svm = SceneVisibilityManager.instance;
+        bool hidden = false;
+
+        for (Transform t = transform; t != null && !hidden; t = t.parent)
+            hidden = svm.IsHidden(t.gameObject, false);
+
+        foreach (Renderer r in _visual.GetComponentsInChildren<Renderer>(true))
+            r.enabled = !hidden;
+    }
+
+    protected override void OnDestroy()
+    {
+        if (!Application.isPlaying) 
+        {
+            base.OnDestroy();
+            return;
+        }
+        
+        SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
+
+        if (_visual != null)
+            DestroyImmediate(_visual);
     }
 }
