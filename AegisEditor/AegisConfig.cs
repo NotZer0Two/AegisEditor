@@ -66,12 +66,6 @@ public class AegisConfig
     [Description("Parents objects on the client following the Unity hierarchy like the game does with admin toys. Empty objects become invisible primitives and positions, rotations and scales are synced in local space, so moving a parent no longer sends updates for its children")]
     public bool UseGameParenting { get; set; } = true;
 
-    /// <summary>
-    /// Map files loaded automatically when the map generates.
-    /// </summary>
-    [Description("Files from the Maps folder (without .json, saved with aegistool save) loaded automatically when the map generates. Schematics are spawned in a room of their type, edits are applied to their prefab")]
-    public List<string> AutoMaps { get; set; } = new();
-    
     [Description("Prefabs spawned automatically when the map generates")]
     public List<AutoSpawnEntry> AutoSpawns { get; set; } = new()
     {

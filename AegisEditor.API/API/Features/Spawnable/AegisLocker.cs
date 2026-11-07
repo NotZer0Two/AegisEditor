@@ -78,9 +78,6 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
     {
         SyncWithLayout();
         RefreshVisual();
-
-        SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
-        SceneVisibilityManager.visibilityChanged += ApplyVisibility;
     }
 
     /// <summary>
@@ -130,8 +127,6 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
-        
-        ApplyVisibility();
     }
 
     private void OnDrawGizmos()
@@ -213,39 +208,4 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
 
     private static int[] ParseInts(string text) =>
         text.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
-    
-    private void ApplyVisibility()
-    {
-        if (this == null)
-        {
-            SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
-            return;
-        }
-
-        if (_visual == null)
-            return;
-
-        SceneVisibilityManager svm = SceneVisibilityManager.instance;
-        bool hidden = false;
-
-        for (Transform t = transform; t != null && !hidden; t = t.parent)
-            hidden = svm.IsHidden(t.gameObject, false);
-
-        foreach (Renderer r in _visual.GetComponentsInChildren<Renderer>(true))
-            r.enabled = !hidden;
-    }
-
-    protected override void OnDestroy()
-    {
-        if (!Application.isPlaying) 
-        {
-            base.OnDestroy();
-            return;
-        }
-        
-        SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
-
-        if (_visual != null)
-            DestroyImmediate(_visual);
-    }
 }

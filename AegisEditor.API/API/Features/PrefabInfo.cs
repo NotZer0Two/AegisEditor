@@ -73,11 +73,6 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
     /// Gets invoked when prefab is despawning.
     /// </summary>
     public event Action<PrefabInfo> PrefabDespawning;
-    
-    /// <summary>
-    /// Gets invoked when a prefab Instantiate.
-    /// </summary>
-    public static event Action<PrefabInfo> Instantiated;
 
     /// <summary>
     /// Spawns the prefab.
@@ -113,8 +108,6 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
             foreach (AegisSpawnable spawnable in Spawnables)
                 spawnable.RefreshClientParent();
 
-            Instantiated?.Invoke(this);
-            
             if (defaultPosition)
                 AegisAPI.ServerSpawner.OnRequestPosition(this, Object.GetComponent<AegisSpawningLocation>());
 

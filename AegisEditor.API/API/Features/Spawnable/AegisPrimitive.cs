@@ -20,7 +20,7 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     /// <summary>
     /// If this primitive was generated to stand in for an empty object so it can be a parent on the client.
     /// </summary>
-    public bool IsParentOnly;
+    internal bool IsParentOnly;
 
     /// <inheritdoc />
     public override SpawnableType Type => SpawnableType.Primitive;

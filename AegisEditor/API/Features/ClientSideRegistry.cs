@@ -52,12 +52,6 @@ public static class ClientSideRegistry
         [typeof(AegisLocker)] = s => new ServerLockerSpawner((AegisLocker)s),
         [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
     };
-    
-    private static readonly HashSet<Type> ClientSided =
-    [
-        typeof(AegisPrimitive), typeof(AegisCullingParent), typeof(AegisLight), typeof(AegisText),
-        typeof(AegisSpeaker), typeof(AegisDecals), typeof(AegisCapybara),
-    ];
 
     /// <summary>
     /// When the registery is enabled.
@@ -263,47 +257,6 @@ public static class ClientSideRegistry
         }
 
         obj.Release();
-    }
-    
-    /// <summary>
-    /// Spawnable types that can be created from code.
-    /// </summary>
-    public static IEnumerable<Type> CreatableTypes =>
-        Factories.Keys.Where(t => t != typeof(AegisCullingParent)).OrderBy(t => t.Name);
-
-    /// <summary>
-    /// If objects of the type exist only on the client and can be updated live.
-    /// </summary>
-    public static bool IsClientSided(Type type) => ClientSided.Contains(type);
-
-    internal static void Refresh(AegisSpawnable spawnable)
-    {
-        if (spawnable.SpawnedBy == null || !ClientSided.Contains(spawnable.GetType())
-                                        || spawnable is not INetworked { NetID: not 0 } networked)
-            return;
-
-        if (!Entries.TryGetValue(spawnable.SpawnedBy, out Entry entry))
-            return;
-
-        int index = entry.Objects.FindIndex(o => o.NetId == networked.NetID);
-        if (index < 0)
-            return;
-
-        NetworkedObject old = entry.Objects[index];
-        NetworkedObject fresh = Factories[spawnable.GetType()](spawnable);
-        entry.Objects[index] = fresh;
-        ClientSideSpawner.Skip(old);
-
-        foreach (Player player in entry.Spawned)
-        {
-            if (player.IsDestroyed)
-                continue;
-
-            old.Destroy(player);
-            fresh.Spawn(player);
-        }
-
-        old.Release();
     }
 
     /// <summary>
