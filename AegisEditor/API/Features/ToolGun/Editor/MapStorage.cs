@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using AegisEditor.API.Features.ServerSided.Editor;
 using AegisEditor.API.Features.ToolGun.Editor;
-using LabApi.Loader;
 using MapGeneration;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace AegisEditor.API.Features.ToolGun;
@@ -16,6 +14,12 @@ namespace AegisEditor.API.Features.ToolGun;
 /// </summary>
 public static class MapStorage
 {
+
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true
+    };
+
     public static string Folder => Path.Combine(AegisAPI.BundlesDirectory, "Maps");
     
     public static string Save(PlacedPrefab placed, string name)
@@ -34,7 +38,8 @@ public static class MapStorage
 
         Directory.CreateDirectory(Folder);
         string path = PathOf(name);
-        File.WriteAllText(path, JsonConvert.SerializeObject(data, Formatting.Indented));
+        using Stream file = File.Create(path);
+        JsonSerializer.Serialize(file, data, SerializerOptions);
 
         return $"Saved {data.Kind} \"{name}\": {data.Objects.Count} objects, {data.Edits.Count} edits{(data.Moved ? ", moved" : string.Empty)}.\n{path}";
     }
@@ -63,7 +68,8 @@ public static class MapStorage
 
     private static SchematicData Read(string path)
     {
-        SchematicData data = JsonConvert.DeserializeObject<SchematicData>(File.ReadAllText(path));
+        using Stream file = File.OpenRead(path);
+        SchematicData? data = JsonSerializer.Deserialize<SchematicData>(file);
 
         if (data == null || string.IsNullOrEmpty(data.Prefab) || string.IsNullOrEmpty(data.Bundle))
             throw new InvalidOperationException("The file is empty or in an old format, save it again.");

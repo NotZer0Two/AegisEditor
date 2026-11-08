@@ -22,16 +22,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" ExcludeAssets="runtime" />
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
         <PackageReference Include="Lib.Harmony" Version="2.2.2" ExcludeAssets="runtime" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <Reference Include="System" Private="false" />
         <Reference Include="System.Core" Private="false" />
         <Reference Include="mscorlib" Private="false" />
         <Reference Include="System.Data" Private="false" />
         <Reference Include="System.Data.DataSetExtensions" Private="false" />
+        <Reference Include="System.Text.Json" Private="false" />
         <Reference Include="Assembly-CSharp-firstpass" Private="false" />
         <Reference Include="LabApi" Private="false" />
         <Reference Include="Assembly-CSharp" Publicize="true" Private="false" />
@@ -47,12 +48,8 @@
         <Reference Include="YamlDotNet" Private="false" />
         <Reference Include="netstandard" Private="false" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <ProjectReference Include="..\AegisEditor.API\AegisEditor.API.csproj" />
-    </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <ProjectReference Include="..\AegisEditor.API\AegisEditor.API.csproj" />
     </ItemGroup>
 </Project>
