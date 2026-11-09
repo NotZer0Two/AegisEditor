@@ -27,6 +27,12 @@ public class AegisDoor : AegisSpawnable
     /// <summary>
     /// Is the door opened.
     /// </summary>
+    [Tooltip("Everything less than 0 will set the default game value")]
+    public float Health = -1;
+    
+    /// <summary>
+    /// Is the door opened.
+    /// </summary>
     public bool isOpened;
     
     /// <summary>
@@ -38,6 +44,11 @@ public class AegisDoor : AegisSpawnable
     /// Permission.
     /// </summary>
     public DoorPermissionFlags Permissions;
+    
+    /// <summary>
+    /// Lock.
+    /// </summary>
+    public DoorLockReasonEditor Lock;
     
     /// <summary>
     /// Actions executed when the door opens.
