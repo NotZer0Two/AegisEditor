@@ -195,7 +195,10 @@ public static class ClientSideRegistry
         foreach (NetworkedObject obj in list)
         {
             if (AegisPlugin.Instance.Config.FixServerSideWaypoints && obj is IServerSidedWaypoint)
+            {
+                TrackedIds.Remove(obj.NetId);
                 continue;
+            }
 
             if (TrackedIds.Contains(obj.NetId))
                 ByNetId[obj.NetId] = entry;
