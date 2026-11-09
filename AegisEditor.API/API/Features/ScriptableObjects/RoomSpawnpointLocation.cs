@@ -16,5 +16,5 @@ public class RoomSpawnpointLocation : SchematicSpawnpoint
     public Vector3 LocalPosition { get; set; }
 
     [field: SerializeField]
-    public Quaternion LocalRotation { get; set; }
+    public Vector3 LocalRotation { get; set; }
 }

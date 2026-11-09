@@ -21,10 +21,10 @@ public static class SpawnLocationExtensions
         switch (location)
         {
             case FixedSpawnpointLocation fixedLocation:
-                pose = new Pose(fixedLocation.Position, fixedLocation.Rotation);
+                pose = new Pose(fixedLocation.Position, Quaternion.Euler(fixedLocation.Rotation));
                 return true;
             case RoomSpawnpointLocation roomLocation:
-                return roomLocation.Room.FindRoom().TryGetPose(roomLocation.LocalPosition, roomLocation.LocalRotation, out pose);
+                return roomLocation.Room.FindRoom().TryGetPose(roomLocation.LocalPosition, Quaternion.Euler(roomLocation.LocalRotation), out pose);
             default:
                 pose = Pose.identity;
                 return false;
