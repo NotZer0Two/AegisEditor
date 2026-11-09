@@ -32,21 +32,20 @@ public class SpawnOverride
     public SchematicSpawnpoint ToScript()
     {
         SchematicSpawnpoint script;
-        Quaternion rotation = Quaternion.Euler(Rotation);
 
         if (Type == SpawnLocationType.Room)
         {
             RoomSpawnpointLocation roomScript = ScriptableObject.CreateInstance<RoomSpawnpointLocation>();
             roomScript.Room = Room;
             roomScript.LocalPosition = Position;
-            roomScript.LocalRotation = rotation;
+            roomScript.LocalRotation = Rotation;
             script = roomScript;
         }
         else
         {
             FixedSpawnpointLocation fixedScript = ScriptableObject.CreateInstance<FixedSpawnpointLocation>();
             fixedScript.Position = Position;
-            fixedScript.Rotation = rotation;
+            fixedScript.Rotation = Rotation;
             script = fixedScript;
         }
 

@@ -12,5 +12,5 @@ public class FixedSpawnpointLocation : SchematicSpawnpoint
     public Vector3 Position { get; set; }
 
     [field: SerializeField]
-    public Quaternion Rotation { get; set; } = Quaternion.identity;
+    public Vector3 Rotation { get; set; }
 }

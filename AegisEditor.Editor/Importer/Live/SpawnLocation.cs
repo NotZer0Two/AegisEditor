@@ -20,7 +20,6 @@ internal static class SpawnLocations
 
     public static void Attach(GameObject root, SchematicData data)
     {
-        Quaternion rotation = Quaternion.Euler(data.GetRotation());
         RoomType room = data.GetRoom();
         SchematicSpawnpoint location;
 
@@ -28,7 +27,7 @@ internal static class SpawnLocations
         {
             FixedSpawnpointLocation fixedLocation = ScriptableObject.CreateInstance<FixedSpawnpointLocation>();
             fixedLocation.Position = data.GetPosition();
-            fixedLocation.Rotation = rotation;
+            fixedLocation.Rotation = data.GetRotation();
             location = fixedLocation;
         }
         else
@@ -36,7 +35,7 @@ internal static class SpawnLocations
             RoomSpawnpointLocation roomLocation = ScriptableObject.CreateInstance<RoomSpawnpointLocation>();
             roomLocation.Room = room;
             roomLocation.LocalPosition = data.GetPosition();
-            roomLocation.LocalRotation = rotation;
+            roomLocation.LocalRotation = data.GetRotation();
             location = roomLocation;
         }
 
