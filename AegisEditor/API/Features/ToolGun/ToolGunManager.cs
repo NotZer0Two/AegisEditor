@@ -6,6 +6,7 @@ using AegisEditor.API.Features.Spawnable;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using MEC;
+using NorthwoodLib.Pools;
 using UserSettings.ServerSpecific;
 
 namespace AegisEditor.API.Features.ToolGun;
@@ -140,7 +141,7 @@ public static class ToolGunManager
     private static string BuildHud(ToolGunItem toolGun, ToolGunContext context, AegisSpawnable hover)
     {
         ToolGunMode mode = toolGun.Mode;
-        StringBuilder text = new("<size=60%>");
+        StringBuilder text = StringBuilderPool.Shared.Rent("<size=60%>");
 
         text.AppendLine($"<b>{mode.Name}</b> [{toolGun.ModeIndex + 1}/{ToolGunMode.All.Count}]  (reload / drop: previous / next mode)");
         text.AppendLine($"Shoot: {mode.Primary}");
@@ -160,7 +161,7 @@ public static class ToolGunManager
             text.AppendLine($"<color=orange>{pending} prefab(s) need a rebuild (Apply mode)</color>");
 
         text.Append("</size>");
-        return text.ToString();
+        return StringBuilderPool.Shared.ToStringReturn(text);
     }
 
     private static string Describe(ToolGunSession session)
