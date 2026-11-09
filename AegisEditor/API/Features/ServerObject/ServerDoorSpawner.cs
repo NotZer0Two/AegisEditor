@@ -1,3 +1,4 @@
+using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces.Network;
@@ -8,6 +9,7 @@ using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using Mirror;
 using UnityEngine;
+using BreakableDoor = Interactables.Interobjects.BreakableDoor;
 using DoorPermissionFlags = Interactables.Interobjects.DoorUtils.DoorPermissionFlags;
 
 namespace AegisEditor.API.Features.ServerObject;
@@ -43,6 +45,12 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
             RequiredPermissions = (DoorPermissionFlags)source.Permissions,
         };
 
+        if (door is BreakableDoor broken && source.Health < 0)
+            broken.MaxHealth = source.Health;
+        
+        if(source.Lock != DoorLockReasonEditor.None)
+            door.ServerChangeLock((DoorLockReason)source.Lock, true);
+        
         NetworkServer.Spawn(door.gameObject);
 
         PlayerEvents.InteractedDoor += OnInteractedDoor;
