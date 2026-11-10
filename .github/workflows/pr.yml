@@ -64,7 +64,7 @@ jobs:
       - name: Compress images
         if: matrix.configuration == 'Release'
         run: |
-          sudo apt-get install -y pngquant
+          sudo apt-get install -y pngquant imagemagick
           find Packages -type f -iname '*.png' -print0 | xargs -0 -n1 -P4 pngquant --quality=65-85 --skip-if-larger --ext .png --force || true
           find Packages -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 | xargs -0 -n1 -P4 mogrify -strip -quality 80
           find Packages -type f -iname '*.tga' -print0 | xargs -0 -n1 -P4 mogrify -compress RLE
