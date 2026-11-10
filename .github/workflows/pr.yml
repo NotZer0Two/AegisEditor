@@ -61,6 +61,15 @@ jobs:
           cp ${{ env.OUT }}/AegisEditor.API.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Runtime/
           cp ${{ env.OUT }}/AegisEditor.Editor.dll ${{ github.workspace }}/Packages/${{ env.PACKAGE }}/Editor/
 
+      - name: Compress images
+        if: matrix.configuration == 'Release'
+        run: |
+          sudo apt-get install -y pngquant
+          find Packages -type f -iname '*.png' -print0 | xargs -0 -n1 -P4 pngquant --quality=65-85 --skip-if-larger --ext .png --force || true
+          find Packages -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0 | xargs -0 -n1 -P4 mogrify -strip -quality 80
+          find Packages -type f -iname '*.tga' -print0 | xargs -0 -n1 -P4 mogrify -compress RLE
+          find Packages -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.tga' -o -iname '*.bmp' \) -print0 | xargs -0 -n1 -P4 mogrify -resize '1280x720>'
+
       - name: Upload plugins
         uses: actions/upload-artifact@v7.0.2
         with:
