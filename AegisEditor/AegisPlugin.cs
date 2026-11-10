@@ -261,42 +261,70 @@ public class AegisPlugin : Plugin<AegisConfig>
         AegisServerCalls.GetRole = obj =>
             ReferenceHub.TryGetHub(obj, out ReferenceHub hub) ? (SelectableRoles)hub.GetRoleId() : (SelectableRoles)RoleTypeId.None;
 
+
         AegisServerCalls.Teleport = (target, origin, dest, lagCompensation) =>
         {
+            if (target == null || origin == null || dest == null)
+                return;
+
+            Transform source = origin.transform;
+            Transform destination = dest.transform;
+
+            Quaternion deltaRotation =
+                destination.rotation * Quaternion.Inverse(source.rotation);
+
             Player player = Player.Get(target);
+
             if (player != null)
             {
                 if (player.RoleBase is not IFpcRole { FpcModule: { } fpm })
                     return;
-                
-                Vector3 localPos = origin.transform.InverseTransformPoint(player.Position);
-                Vector3 deltaPos = dest.transform.TransformPoint(localPos) - player.Position;
-                Vector3 deltaEuler = dest.transform.rotation.eulerAngles - origin.transform.rotation.eulerAngles;
 
-                fpm.CharController.transform.position += deltaPos;
+                Transform controller = fpm.CharController.transform;
+
+                Vector3 localPosition =
+                    source.InverseTransformPoint(controller.position);
+
+                Vector3 destinationPosition =
+                    destination.TransformPoint(localPosition);
+
+                Vector3 destinationRotation =
+                    (deltaRotation * controller.rotation).eulerAngles;
 
                 if (lagCompensation)
                 {
-                    float ping = (float)(player.ReferenceHub.netIdentity.connectionToClient.rtt * 2d / 1000d);
-                    fpm.CharController.Move(Quaternion.Euler(deltaEuler) * player.Velocity * ping);
+                    float ping = (float)(
+                        player.ReferenceHub.netIdentity.connectionToClient.rtt * 2d / 1000d
+                    );
+
+                    Vector3 velocityOffset =
+                        deltaRotation * player.Velocity * ping;
+
+                    destinationPosition += velocityOffset;
                 }
 
-                fpm.ServerOverridePosition(fpm.CharController.transform.position);
-                fpm.ServerOverrideRotation(player.Rotation.eulerAngles + deltaEuler);
+                controller.SetPositionAndRotation(
+                    destinationPosition,
+                    Quaternion.Euler(destinationRotation)
+                );
+
+                fpm.ServerOverridePosition(destinationPosition);
+                fpm.ServerOverrideRotation(destinationRotation);
+
                 return;
             }
 
-            Quaternion deltaRot = dest.transform.rotation * Quaternion.Inverse(origin.transform.rotation);
-            Vector3 local = origin.transform.InverseTransformPoint(target.transform.position);
+            Vector3 local = source.InverseTransformPoint(target.transform.position);
 
-            target.transform.SetPositionAndRotation(
-                dest.transform.TransformPoint(local),
-                deltaRot * target.transform.rotation);
+            Vector3 worldPosition = destination.TransformPoint(local);
+            Quaternion worldRotation = deltaRotation * target.transform.rotation;
+
+            target.transform.SetPositionAndRotation(worldPosition, worldRotation);
 
             if (target.TryGetComponent(out Rigidbody rb))
             {
-                rb.velocity = deltaRot * rb.velocity;
-                rb.angularVelocity = deltaRot * rb.angularVelocity;
+                rb.velocity = deltaRotation * rb.velocity;
+                rb.angularVelocity = deltaRotation * rb.angularVelocity;
             }
         };
     }

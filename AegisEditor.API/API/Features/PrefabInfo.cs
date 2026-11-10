@@ -258,7 +258,16 @@ public class PrefabInfo(int id, BundleInfo bundle, string prefabName)
         }
 
         SubObjects.Clear();
-        UnityEngine.Object.Destroy(Object);
+        
+        GameObject instance = Object;
+        
+        Object = null;
+        Spawnables = null;
+
+        if (instance != null)
+            instance.SetActive(false);
+
+        UnityEngine.Object.Destroy(instance);
         return true;
     }
 

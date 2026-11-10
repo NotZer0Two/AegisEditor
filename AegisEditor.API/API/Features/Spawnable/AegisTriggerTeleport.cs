@@ -91,13 +91,21 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
         if (string.IsNullOrEmpty(id))
             return false;
 
-        foreach (AegisTriggerTeleport instance in _instances)
+        for (int i = _instances.Count - 1; i >= 0; i--)
         {
-            if (instance.id == id)
+            AegisTriggerTeleport instance = _instances[i];
+
+            if (instance == null || !instance.isActiveAndEnabled)
             {
-                teleporter = instance;
-                return true;
+                _instances.RemoveAt(i);
+                continue;
             }
+
+            if (instance.id != id)
+                continue;
+
+            teleporter = instance;
+            return true;
         }
 
         return false;
@@ -110,9 +118,11 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     /// <returns>The teleporters found.</returns>
     public static IEnumerable<AegisTriggerTeleport> GetAll(string id)
     {
-        foreach (AegisTriggerTeleport instance in _instances)
+        for (int i = _instances.Count - 1; i >= 0; i--)
         {
-            if (instance.id == id)
+            AegisTriggerTeleport instance = _instances[i];
+
+            if (instance != null && instance.isActiveAndEnabled && instance.id == id)
                 yield return instance;
         }
     }
@@ -130,14 +140,40 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
     private void Awake()
     {
         destination = _destination;
-        _instances.Add(this);
     }
 
-    private void OnDestroy() => _instances.Remove(this);
+    private void OnEnable()
+    {
+        if (!_instances.Contains(this))
+            _instances.Add(this);
+    }
+    
+    private void OnDisable()
+    {
+        _instances.Remove(this);
+
+        foreach (Coroutine coroutine in _pending.Values)
+        {
+            if (coroutine != null)
+                StopCoroutine(coroutine);
+        }
+
+        _pending.Clear();
+        _ignored.Clear();
+        _inside.Clear();
+    }
+
+    private void OnDestroy()
+    {
+        _instances.Remove(this);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
         GameObject target = GetTarget(other);
+
+        if (target == null)
+            return;
 
         _inside.TryGetValue(target, out int count);
         _inside[target] = count + 1;
@@ -145,20 +181,23 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
         if (count > 0)
             return;
 
-        if (_ignored.Contains(target) || !IsAllowed(target) || !ResolveDestination())
+        if (_ignored.Contains(target) || !IsAllowed(target))
             return;
 
         if (delay <= 0f)
+        {
             Teleport(target);
-        else
-            _pending[target] = StartCoroutine(TeleportDelayed(target));
+            return;
+        }
+
+        _pending[target] = StartCoroutine(TeleportDelayed(target));
     }
 
     private void OnTriggerExit(Collider other)
     {
         GameObject target = GetTarget(other);
 
-        if (!_inside.TryGetValue(target, out int count))
+        if (target == null || !_inside.TryGetValue(target, out int count))
             return;
 
         if (count > 1)
@@ -172,32 +211,36 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
 
         if (_pending.TryGetValue(target, out Coroutine routine))
         {
-            StopCoroutine(routine);
+            if (routine != null)
+                StopCoroutine(routine);
+
             _pending.Remove(target);
         }
-    }
-
-    private void OnDisable()
-    {
-        _pending.Clear();
-        _ignored.Clear();
-        _inside.Clear();
     }
 
     private static GameObject GetTarget(Collider other)
     {
         return other.attachedRigidbody != null ? other.attachedRigidbody.gameObject : other.gameObject;
     }
-
+    
     private bool ResolveDestination()
     {
         if (destination != null)
+        {
+            destination.TryGetComponent(out _next);
             return true;
+        }
 
-        if (TryGet(destinationId, out AegisTriggerTeleport found) && found != this)
-            destination = found.gameObject;
+        _next = null;
 
-        return destination != null;
+        if (string.IsNullOrEmpty(destinationId))
+            return false;
+
+        if (!TryGet(destinationId, out AegisTriggerTeleport found) || found == this)
+            return false;
+
+        destination = found.gameObject;
+        return true;
     }
 
     private bool IsAllowed(GameObject target)
@@ -205,7 +248,9 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
         if (allowedRoles.Count == 0)
             return true;
 
-        SelectableRoles role = AegisServerCalls.GetRole?.Invoke(target) ?? SelectableRoles.None;
+        SelectableRoles role =
+            AegisServerCalls.GetRole?.Invoke(target) ?? SelectableRoles.None;
+
         return allowedRoles.Contains(role);
     }
 
@@ -215,16 +260,29 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
 
         _pending.Remove(target);
 
-        if (target != null)
+        if (target != null && isActiveAndEnabled)
             Teleport(target);
     }
 
     private void Teleport(GameObject target)
     {
+        if (target == null || !ResolveDestination())
+            return;
+
+        GameObject dest = destination;
+
+        if (dest == null)
+            return;
+
         if (_next != null)
             _next._ignored.Add(target);
 
-        AegisServerCalls.Teleport?.Invoke(target, gameObject, destination, lagCompensation);
+        AegisServerCalls.Teleport?.Invoke(
+            target,
+            gameObject,
+            dest,
+            lagCompensation
+        );
 
         foreach (AegisAction action in onTeleport)
         {
