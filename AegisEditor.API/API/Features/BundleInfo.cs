@@ -101,7 +101,7 @@ public class BundleInfo(AssetBundle bundle, string path, string name)
 
         foreach (PrefabInfo prefab in PrefabInstances.Values.ToArray())
         {
-            if (!prefab.Spawn())
+            if (!prefab.Spawn(prefab.Position, prefab.Rotation, prefab.Scale, null, defaultPosition: false))
                 prefab.Unload();
         }
 
