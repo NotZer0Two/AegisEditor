@@ -14,9 +14,15 @@ internal static class AegisAutodeskConverter
         if (target == null) return 0;
 
         var count = 0;
-        foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { "Assets" }))
+        foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { "Assets", "Packages" }))
         {
-            var material = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            var info = UnityEditor.PackageManager.PackageInfo.FindForAssetPath(path);
+            if (info != null && info.source is not (UnityEditor.PackageManager.PackageSource.Embedded
+                    or UnityEditor.PackageManager.PackageSource.Local))
+                continue;
+
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null || material.shader == null || !material.shader.name.Contains("Autodesk Interactive")) continue;
 
             var color = Get(material, "_Color", Color.white);
