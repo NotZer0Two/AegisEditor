@@ -223,10 +223,27 @@ public static class ClientSideRegistry
             DestroyFor(prefab, player);
         }
 
+        foreach (NetworkedObject obj in entry.Objects)
+        {
+            if (obj is not IServerSidedWaypoint)
+                continue;
+
+            foreach (Player player in Player.ReadyList)
+            {
+                if (!player.IsDestroyed)
+                    obj.Destroy(player);
+            }
+        }
+
         Entries.Remove(prefab);
 
         foreach (NetworkedObject obj in entry.Objects)
+        {
             ByNetId.Remove(obj.NetId);
+            TrackedIds.Remove(obj.NetId);
+            TestOwners.Remove(obj.NetId);
+            obj.Release();
+        }
     }
 
     private static void OnReloaded()

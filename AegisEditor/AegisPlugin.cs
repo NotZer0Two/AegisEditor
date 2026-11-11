@@ -272,7 +272,7 @@ public class AegisPlugin : Plugin<AegisConfig>
 
             Quaternion deltaRotation =
                 destination.rotation * Quaternion.Inverse(source.rotation);
-
+            
             Player player = Player.Get(target);
 
             if (player != null)
