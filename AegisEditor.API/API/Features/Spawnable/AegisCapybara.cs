@@ -55,7 +55,7 @@ public class AegisCapybara : AegisSpawnable, ICollidable, INetworked
     /// <inheritdoc />
     public override void InitializeInEditor()
     {
-        if (Application.isPlaying || transform.Find("EditorVisual") != null)
+        if (Application.isPlaying || transform.Find("EditorVisual") != null || EditorUtility.IsPersistent(this))
             return;
 
         Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(MeshPath);

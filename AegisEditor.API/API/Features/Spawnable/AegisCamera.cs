@@ -70,7 +70,7 @@ public class AegisCamera : AegisSpawnable
 
     private void RefreshVisual()
     {
-        if (this == null || Application.isPlaying)
+        if (this == null || Application.isPlaying || EditorUtility.IsPersistent(this))
             return;
 
         if (_visual != null)
