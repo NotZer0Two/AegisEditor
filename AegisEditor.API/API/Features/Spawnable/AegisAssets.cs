@@ -126,5 +126,8 @@ public class AegisAssets : AegisSpawnable
 
         foreach (Renderer r in _visual.GetComponentsInChildren<Renderer>(true))
             r.enabled = !hidden;
+
+        foreach (Canvas c in _visual.GetComponentsInChildren<Canvas>(true))
+            c.enabled = !hidden;
     }
 }
