@@ -97,7 +97,7 @@ public static class MaterialCache
             Object.Destroy(material);
     }
 
-    private static Pipeline GetPipeline()
+    public static Pipeline GetPipeline()
     {
         RenderPipelineAsset asset = GraphicsSettings.currentRenderPipeline;
         if (asset == null)

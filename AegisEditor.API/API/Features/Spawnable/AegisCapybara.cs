@@ -68,8 +68,10 @@ public class AegisCapybara : AegisSpawnable, ICollidable, INetworked
         {
             hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy
         };
-
         visual.transform.SetParent(transform, false);
+        
+        if(MaterialCache.GetPipeline() == Pipeline.Urp)
+            visual.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
         visual.AddComponent<MeshFilter>().sharedMesh = mesh;
         visual.AddComponent<MeshRenderer>().sharedMaterial = material;
     }

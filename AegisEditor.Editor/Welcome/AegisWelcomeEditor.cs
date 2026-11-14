@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -31,17 +33,43 @@ internal class AegisWelcomeEditor : UnityEditor.Editor
         return Pipeline.BuiltIn;
     }
 
-    /// <summary>Runs the first menu item that exists and saves the project.</summary>
+    /// <summary>Invokes a parameterless static method on a type found in any loaded assembly.</summary>
+    private static bool InvokeStatic(string typeName, string method)
+    {
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var info = assembly.GetType(typeName)?.GetMethod(method, flags, null, Type.EmptyTypes, null);
+            if (info == null) continue;
+            info.Invoke(null, null);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Calls the pipeline's material upgrader directly.</summary>
+    private static bool RunUpgrader(bool hdrp)
+    {
+        return hdrp
+            ? InvokeStatic("UnityEditor.Rendering.HighDefinition.UpgradeStandardShaderMaterials", "UpgradeMaterialsProject")
+            : InvokeStatic("UnityEditor.Rendering.Universal.UniversalRenderPipelineMaterialUpgrader", "UpgradeProjectMaterials");
+    }
+
+    /// <summary>Runs the upgrader, falls back to the first existing menu item, then converts Autodesk Interactive materials.</summary>
     private static void Convert(string label, string[] menus, bool hdrp)
     {
         if (!EditorUtility.DisplayDialog(label, "All Built-in and Autodesk Interactive materials in the project will be converted. This can't be undone.", "Convert", "Cancel")) return;
 
-        var ran = false;
-        foreach (var menu in menus)
+        var ran = RunUpgrader(hdrp);
+
+        if (!ran)
         {
-            if (!EditorApplication.ExecuteMenuItem(menu)) continue;
-            ran = true;
-            break;
+            foreach (var menu in menus)
+            {
+                if (!EditorApplication.ExecuteMenuItem(menu)) continue;
+                ran = true;
+                break;
+            }
         }
 
         var autodesk = AegisAutodeskConverter.Convert(hdrp);
