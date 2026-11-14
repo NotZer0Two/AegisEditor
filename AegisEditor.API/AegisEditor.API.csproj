@@ -42,6 +42,7 @@
         <Reference Include="UnityEngine.IMGUIModule" Private="false" />
         <Reference Include="Unity.TextMeshPro" Private="false" />
         <Reference Include="UnityEngine.UI" Private="false" />
+        <Reference Include="UnityEngine.UIModule" Private="false" />
         <Reference Include="netstandard" Private="false" />
     </ItemGroup>
     
