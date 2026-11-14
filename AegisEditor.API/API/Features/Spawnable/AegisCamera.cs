@@ -51,6 +51,9 @@ public class AegisCamera : AegisSpawnable
     public override void InitializeInEditor()
     {
         RefreshVisual();
+
+        SceneVisibilityManager.visibilityChanged -= ApplyVisibility; // avoids double subscribing
+        SceneVisibilityManager.visibilityChanged += ApplyVisibility;
     }
 
     /// <inheritdoc />
@@ -70,7 +73,7 @@ public class AegisCamera : AegisSpawnable
 
     private void RefreshVisual()
     {
-        if (this == null || Application.isPlaying)
+        if (this == null || Application.isPlaying || EditorUtility.IsPersistent(this))
             return;
 
         if (_visual != null)
@@ -91,6 +94,8 @@ public class AegisCamera : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+
+        ApplyVisibility();
     }
     
     private void OnDrawGizmos()
@@ -121,5 +126,26 @@ public class AegisCamera : AegisSpawnable
             Quaternion.AngleAxis(-verticalConstraint.y, transform.right) * transform.forward,
             verticalConstraint.y - verticalConstraint.x,
             GizmoRadius);
+    }
+    
+    private void ApplyVisibility()
+    {
+        if (this == null)
+        {
+            SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
+            return;
+        }
+
+        if (_visual == null)
+            return;
+
+        SceneVisibilityManager svm = SceneVisibilityManager.instance;
+        bool hidden = false;
+
+        for (Transform t = transform; t != null && !hidden; t = t.parent)
+            hidden = svm.IsHidden(t.gameObject, false);
+
+        foreach (Renderer r in _visual.GetComponentsInChildren<Renderer>(true))
+            r.enabled = !hidden;
     }
 }

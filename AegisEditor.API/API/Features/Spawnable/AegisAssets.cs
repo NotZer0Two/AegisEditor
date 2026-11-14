@@ -35,6 +35,9 @@ public class AegisAssets : AegisSpawnable
     public override void InitializeInEditor()
     {
         RefreshVisual();
+
+        SceneVisibilityManager.visibilityChanged -= ApplyVisibility; // avoids double subscribing
+        SceneVisibilityManager.visibilityChanged += ApplyVisibility;
     }
 
     /// <inheritdoc />
@@ -59,7 +62,7 @@ public class AegisAssets : AegisSpawnable
 
     private void RefreshVisual()
     {
-        if (this == null || Application.isPlaying)
+        if (this == null || Application.isPlaying || EditorUtility.IsPersistent(this))
             return;
 
         if (_visual != null)
@@ -91,6 +94,8 @@ public class AegisAssets : AegisSpawnable
 
         foreach (Transform child in _visual.GetComponentsInChildren<Transform>(true))
             child.gameObject.hideFlags = HideFlags.DontSave | HideFlags.HideInHierarchy;
+            
+        ApplyVisibility();
     }
     
     private void OnDrawGizmos()
@@ -100,5 +105,29 @@ public class AegisAssets : AegisSpawnable
 
         _fallbackIcon ??= EditorGUIUtility.IconContent("NavMeshObstacle Icon");
         Handles.Label(transform.position, _fallbackIcon);
+    }
+
+    private void ApplyVisibility()
+    {
+        if (this == null)
+        {
+            SceneVisibilityManager.visibilityChanged -= ApplyVisibility;
+            return;
+        }
+
+        if (_visual == null)
+            return;
+
+        SceneVisibilityManager svm = SceneVisibilityManager.instance;
+        bool hidden = false;
+
+        for (Transform t = transform; t != null && !hidden; t = t.parent)
+            hidden = svm.IsHidden(t.gameObject, false);
+
+        foreach (Renderer r in _visual.GetComponentsInChildren<Renderer>(true))
+            r.enabled = !hidden;
+
+        foreach (Canvas c in _visual.GetComponentsInChildren<Canvas>(true))
+            c.enabled = !hidden;
     }
 }
