@@ -6,6 +6,7 @@ using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Interfaces.Network;
+using AegisEditor.API.Public;
 using AegisEditor.API.Struct;
 using InventorySystem.Items.Pickups;
 using LabApi.Features.Wrappers;
@@ -17,6 +18,8 @@ using DoorPermissionFlags = Interactables.Interobjects.DoorUtils.DoorPermissionF
 using GameLockerLoot = MapGeneration.Distributors.LockerLoot;
 using Locker = MapGeneration.Distributors.Locker;
 using LockerChamber = MapGeneration.Distributors.LockerChamber;
+using AegisLockerLoot = AegisEditor.API.Struct.LockerLoot;
+using Logger = LabApi.Features.Console.Logger;
 
 namespace AegisEditor.API.Features.ServerObject;
 
@@ -28,6 +31,7 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
 {
     private readonly Locker? locker;
     private readonly Dictionary<string, int[]> slots;
+    private readonly Dictionary<ItemType, string> customLoot = new();
 
     /// <summary>
     /// Creates the hidden locker on the server.
@@ -60,6 +64,8 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
 
         Timing.CallDelayed(0.25f, () =>
         {
+            ApplyCustomLoot();
+
             foreach (ItemPickupBase itemPickupBase in locker.GetComponentsInChildren<ItemPickupBase>())
             {
                 if (itemPickupBase.TryGetComponent(out Rigidbody rigidbody))
@@ -97,18 +103,48 @@ public class ServerLockerSpawner : NetworkedObject, IServerSidedWaypoint
     private IEnumerable<LockerChamber> GetChambers(IEnumerable<int> indices) =>
         indices.Select(GetChamber).OfType<LockerChamber>();
 
-    private static void ApplyLoot(Locker target, AegisLocker source)
+    private void ApplyLoot(Locker target, AegisLocker source)
     {
         target.Loot = source.LootPool
             .Select(l => new GameLockerLoot
             {
-                TargetItem = l.ItemType.ToItemType(),
+                TargetItem = ResolveItem(l),
                 MinPerChamber = l.MinSpawn,
                 MaxPerChamber = l.MaxSpawn,
                 ProbabilityPoints = l.Weight,
                 RemainingUses = l.MaxLootRepeats,
             })
             .ToArray();
+    }
+
+    private ItemType ResolveItem(AegisLockerLoot loot)
+    {
+        if (string.IsNullOrEmpty(loot.CustomItemName))
+            return loot.ItemType.ToItemType();
+
+        if (AegisCustomItems.TryGetBaseType(loot.CustomItemName, out ItemType baseType))
+        {
+            customLoot[baseType] = loot.CustomItemName;
+            return baseType;
+        }
+
+        Logger.Error($"Custom item '{loot.CustomItemName}' is not registered, using {loot.ItemType} instead.");
+        return loot.ItemType.ToItemType();
+    }
+
+    private void ApplyCustomLoot()
+    {
+        if (locker == null || customLoot.Count == 0)
+            return;
+
+        foreach (LockerChamber chamber in locker.Chambers)
+        {
+            foreach (ItemPickupBase pickupBase in chamber.Content.ToList())
+            {
+                if (customLoot.TryGetValue(pickupBase.Info.ItemId, out string id) && Pickup.Get(pickupBase) is { } pickup)
+                    AegisCustomItems.Apply(id, pickup);
+            }
+        }
     }
 
     private void ApplySlots(AegisLocker source)

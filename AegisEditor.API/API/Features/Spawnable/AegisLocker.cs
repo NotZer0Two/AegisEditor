@@ -150,7 +150,7 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
             return;
 
         string loot = string.Join(";", LootPool.Select(l =>
-            $"{(int)l.ItemType},{l.MinSpawn},{l.MaxSpawn},{l.Weight},{l.MaxLootRepeats}"));
+            $"{(int)l.ItemType},{l.MinSpawn},{l.MaxSpawn},{l.Weight},{l.MaxLootRepeats},{Uri.EscapeDataString(l.CustomItemName ?? string.Empty)}"));
 
         string slots = string.Join(";", Slots.Select(s =>
             $"{s.Name}|{(int)s.Kind}|{string.Join(",", s.ChamberIndices)}|{(int)s.Data.keycardPermissions}|{string.Join(",", s.Data.validItemTypes.Select(t => (int)t))}"));
@@ -181,14 +181,15 @@ public class AegisLocker : AegisSpawnable, ISerializationCallbackReceiver
 
         foreach (string entry in parts[0].Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            int[] v = ParseInts(entry);
+            string[] f = entry.Split(',');
             LootPool.Add(new LockerLoot
             {
-                ItemType = (SpawnableItemType)v[0],
-                MinSpawn = v[1],
-                MaxSpawn = v[2],
-                Weight = v[3],
-                MaxLootRepeats = v[4],
+                ItemType = (SpawnableItemType)int.Parse(f[0]),
+                MinSpawn = int.Parse(f[1]),
+                MaxSpawn = int.Parse(f[2]),
+                Weight = int.Parse(f[3]),
+                MaxLootRepeats = int.Parse(f[4]),
+                CustomItemName = f.Length > 5 ? Uri.UnescapeDataString(f[5]) : string.Empty,
             });
         }
 
