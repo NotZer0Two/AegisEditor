@@ -10,6 +10,9 @@ public class LockerLoot
 {
     [Tooltip("The item type that spawns if this loot is chosen. CustomItemName must be empty for this to work")]
     public SpawnableItemType ItemType;
+    
+    [Tooltip("Id of a custom item registered by a plugin. Leave empty to use ItemType")]
+    public string CustomItemName;
 
     [Tooltip("The minimum amount of the ItemType to spawn in the chamber if this loot is chosen")]
     public int MinSpawn = 1;

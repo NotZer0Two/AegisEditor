@@ -18,6 +18,12 @@ public class AegisItemSpawner : AegisSpawnable
     public SpawnableItemType Item = SpawnableItemType.KeycardJanitor;
     
     /// <summary>
+    /// Id of a registered custom item. When empty, <see cref="Item"/> is spawned.
+    /// </summary>
+    [Tooltip("Id of a custom item registered by a plugin. Leave empty to spawn the normal Item.")]
+    public string CustomItemName;
+    
+    /// <summary>
     /// Actions executed when the items is picked up.
     /// </summary>
     public List<AegisAction> onPickedUp = new();
