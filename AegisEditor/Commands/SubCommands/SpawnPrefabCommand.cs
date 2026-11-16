@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
+using System.Text;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features;
 using CommandSystem;
-using LabApi.Features.Wrappers;
+using NorthwoodLib.Pools;
 using RemoteAdmin;
 using UnityEngine;
 
@@ -29,20 +31,24 @@ public class SpawnPrefabCommand : ICommand
             return false;
         }
 
-        if (arguments.Count < 2)
+        if (arguments.Count < 1)
         {
-            response = "Syntax: aegiseditor spawnprefab (bundleName) (prefabName) (scale)";
+            response = "Syntax: aegiseditor spawnprefab (bundleName) [prefabName] [scale]  (no prefab spawns every prefab of the bundle)";
             return false;
         }
 
         string bundleName = arguments.At(0);
-        string prefabName = arguments.At(1);
 
         if (!AegisAPI.TryLoadBundle(bundleName, out BundleInfo bundle))
         {
             response = $"Bundle \"{bundleName}\" does not exist or is invalid";
             return false;
         }
+
+        if (arguments.Count == 1)
+            return SpawnAll(bundle, playerSender.ReferenceHub.transform.position, out response);
+
+        string prefabName = arguments.At(1);
 
         if (!bundle.Base.Contains(prefabName))
         {
@@ -70,5 +76,30 @@ public class SpawnPrefabCommand : ICommand
 
         response = $"Spawned prefab [{prefab.Id}] {prefabName}";
         return true;
+    }
+
+    private static bool SpawnAll(BundleInfo bundle, Vector3 position, out string response)
+    {
+        StringBuilder sb = StringBuilderPool.Shared.Rent();
+        int spawned = 0;
+
+        foreach (string prefabName in bundle.Prefabs.Where(p => p.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)))
+        {
+            PrefabInfo prefab = bundle.CreatePrefab(prefabName);
+
+            if (prefab == null || !prefab.Spawn(position, Vector3.zero, Vector3.one))
+            {
+                prefab?.Unload();
+                sb.AppendLine($" - failed: {prefabName}");
+                continue;
+            }
+
+            prefab.ShowAll();
+            spawned++;
+            sb.AppendLine($" - [{prefab.Id}] {prefabName}");
+        }
+
+        response = $"Spawned {spawned} prefab(s) from \"{bundle.Name}\":\n{StringBuilderPool.Shared.ToStringReturn(sb)}";
+        return spawned > 0;
     }
 }

@@ -215,23 +215,32 @@ public class AegisPlugin : Plugin<AegisConfig>
             
             foreach (AutoSpawnEntry entry in Config.AutoSpawns)
             {
-                if (!AegisAPI.TryLoadBundle(entry.Bundle, out BundleInfo bundle) || !bundle.Base.Contains(entry.Prefab))
+                bool all = entry.Prefab == "*";
+
+                if (!AegisAPI.TryLoadBundle(entry.Bundle, out BundleInfo bundle) || (!all && !bundle.Base.Contains(entry.Prefab)))
                 {
                     Logger.Warn(
                         $"Auto spawn skipped, bundle \"{entry.Bundle}\" or prefab \"{entry.Prefab}\" is missing");
-                    return;
+                    continue;
                 }
 
-                PrefabInfo prefab = bundle.CreatePrefab(entry.Prefab);
-                if (prefab == null || !prefab.Spawn(Vector3.zero, Vector3.one, Vector3.one))
+                string[] prefabNames = all
+                    ? [.. bundle.Prefabs.Where(p => p.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))]
+                    : [entry.Prefab];
+
+                foreach (string prefabName in prefabNames)
                 {
-                    prefab?.Unload();
-                    Logger.Warn($"Failed to spawn \"{entry.Prefab}\"");
-                    return;
-                }
+                    PrefabInfo prefab = bundle.CreatePrefab(prefabName);
+                    if (prefab == null || !prefab.Spawn(Vector3.zero, Vector3.one, Vector3.one))
+                    {
+                        prefab?.Unload();
+                        Logger.Warn($"Failed to spawn \"{prefabName}\"");
+                        continue;
+                    }
 
-                _autoSpawnedPrefabs.Add(prefab);
-                prefab.ShowAll();
+                    _autoSpawnedPrefabs.Add(prefab);
+                    prefab.ShowAll();
+                }
             }
         });
     }

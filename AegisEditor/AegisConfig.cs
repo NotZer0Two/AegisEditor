@@ -72,7 +72,7 @@ public class AegisConfig
     [Description("Files from the Maps folder (without .json, saved with aegistool save) loaded automatically when the map generates. Schematics are spawned in a room of their type, edits are applied to their prefab")]
     public List<string> AutoMaps { get; set; } = new();
     
-    [Description("Prefabs spawned automatically when the map generates")]
+    [Description("Prefabs spawned automatically when the map generates, \"*\" spawns every prefab of the bundle")]
     public List<AutoSpawnEntry> AutoSpawns { get; set; } = new()
     {
         new AutoSpawnEntry() 
