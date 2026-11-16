@@ -290,4 +290,76 @@ public class AegisTriggerTeleport : MonoBehaviour, IKeepComponents
                 action.Execute(target);
         }
     }
+
+    private void OnDrawGizmos()
+    {
+        foreach (Collider c in GetComponents<Collider>())
+        {
+            if (c is BoxCollider box)
+            {
+                Gizmos.matrix = transform.localToWorldMatrix;
+                DrawBox(box.center, box.size);
+            }
+            else
+            {
+                Gizmos.matrix = Matrix4x4.identity;
+                DrawBox(c.bounds.center, c.bounds.size);
+            }
+        }
+
+        Gizmos.matrix = Matrix4x4.identity;
+        DrawForwardArrow();
+    }
+
+    private void DrawForwardArrow()
+    {
+        Collider c = GetComponent<Collider>();
+        Vector3 start = GizmoCenter(gameObject);
+        float halfDepth = c is BoxCollider box ? Mathf.Abs(box.size.z * transform.lossyScale.z) / 2f : 0.5f;
+
+        Vector3 forward = transform.forward;
+        Vector3 end = start + forward * (halfDepth + 0.75f);
+        Vector3 side = transform.right;
+
+        Gizmos.color = new(0.2f, 1f, 0.9f);
+        Gizmos.DrawLine(start, end);
+        Gizmos.DrawLine(end, end - forward * 0.3f + side * 0.2f);
+        Gizmos.DrawLine(end, end - forward * 0.3f - side * 0.2f);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.matrix = Matrix4x4.identity;
+        Gizmos.color = new(0.75f, 0.35f, 1f);
+
+        AegisTriggerTeleport[] all = FindObjectsByType<AegisTriggerTeleport>(FindObjectsSortMode.None);
+        GameObject target = destination;
+
+        foreach (AegisTriggerTeleport teleport in all)
+        {
+            if (target == null && !string.IsNullOrEmpty(destinationId) && teleport.id == destinationId)
+                target = teleport.gameObject;
+
+            if (teleport != this && teleport.Targets(this))
+                Gizmos.DrawLine(GizmoCenter(teleport.gameObject), GizmoCenter(gameObject));
+        }
+
+        if (target != null)
+            Gizmos.DrawLine(GizmoCenter(gameObject), GizmoCenter(target));
+    }
+
+    private static Vector3 GizmoCenter(GameObject go) =>
+        go.TryGetComponent(out Collider c) && c.enabled ? c.bounds.center : go.transform.position;
+
+    private bool Targets(AegisTriggerTeleport other) =>
+        destination == other.gameObject
+        || (destination == null && !string.IsNullOrEmpty(destinationId) && destinationId == other.id);
+
+    private static void DrawBox(Vector3 center, Vector3 size)
+    {
+        Gizmos.color = new(0.75f, 0.35f, 1f, 0.15f);
+        Gizmos.DrawCube(center, size);
+        Gizmos.color = new(0.75f, 0.35f, 1f);
+        Gizmos.DrawWireCube(center, size);
+    }
 }
