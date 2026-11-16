@@ -297,8 +297,7 @@ public class AegisPlugin : Plugin<AegisConfig>
                 Vector3 destinationPosition =
                     destination.TransformPoint(localPosition);
 
-                Vector3 destinationRotation =
-                    (deltaRotation * controller.rotation).eulerAngles;
+                Vector2 destinationRotation = new(fpm.MouseLook.CurrentVertical, destination.eulerAngles.y);
 
                 if (lagCompensation)
                 {
@@ -314,7 +313,7 @@ public class AegisPlugin : Plugin<AegisConfig>
 
                 controller.SetPositionAndRotation(
                     destinationPosition,
-                    Quaternion.Euler(destinationRotation)
+                    Quaternion.Euler(0f, destinationRotation.y, 0f)
                 );
 
                 fpm.ServerOverridePosition(destinationPosition);
