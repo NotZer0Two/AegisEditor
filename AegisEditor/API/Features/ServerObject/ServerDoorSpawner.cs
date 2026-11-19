@@ -31,7 +31,7 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
     {
         Source = source;
         lastState = source.isOpened;
-        door = UnityEngine.Object.Instantiate(PrefabCache.Get<BasicDoor>(source.doorType.GetName()));
+        door = Object.Instantiate(PrefabCache.Get<BasicDoor>(source.doorType.GetName()), source.transform.position, source.transform.rotation);
 
         Transform t = door.transform;
         t.SetParent(null);
