@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features.Spawnable;
@@ -20,8 +19,6 @@ namespace AegisEditor.API.Features.ServerObject;
 /// </summary>
 public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
 {
-    internal static List<uint> CameraAffected = new();
-    
     private readonly BasicDoor? door;
     private readonly AegisDoor Source;
     private bool lastState;
@@ -60,9 +57,6 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
         
         NetId = door.netId;
         ClientSideRegistry.TrackedIds.Add(NetId);
-        
-        if(source.can079Open)
-            CameraAffected.Add(NetId);
     }
 
     /// <inheritdoc />
@@ -90,8 +84,7 @@ public class ServerDoorSpawner : NetworkedObject, IServerSidedWaypoint
     public override void Release()
     {
         ClientSideRegistry.TrackedIds.Remove(NetId);
-        CameraAffected.Remove(NetId);
-        
+
         if (door != null)
             Object.Destroy(door.gameObject);
     }

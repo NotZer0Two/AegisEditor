@@ -36,11 +36,6 @@ public class AegisDoor : AegisSpawnable
     public bool isOpened;
     
     /// <summary>
-    /// Is the door possible to be opened by 079.
-    /// </summary>
-    public bool can079Open = true;
-    
-    /// <summary>
     /// Requires all permissions.
     /// </summary>
     public bool RequireAllPermissions;
