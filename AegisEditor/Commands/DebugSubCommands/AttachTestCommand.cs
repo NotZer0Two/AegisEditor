@@ -12,13 +12,13 @@ namespace AegisEditor.Commands.DebugSubCommands;
 public class AttachTestCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "attachtest";
+    public string Command => "attachtest";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "at" };
+    public string[] Aliases { get; } = ["at"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Attaches a spawned prefab to a net id, 0 detaches it (DEBUG ONLY)";
+    public string Description => "Attaches a spawned prefab to a net id, 0 detaches it (DEBUG ONLY)";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

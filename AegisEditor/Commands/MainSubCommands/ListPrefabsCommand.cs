@@ -3,19 +3,19 @@ using System.Text;
 using AegisEditor.API.Features;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class ListPrefabsCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "listprefabs";
+    public string Command => "listprefabs";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "lp", "listp" };
+    public string[] Aliases { get; } = ["lp", "listp", "lsp", "lsprefab"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Gets prefabs which can be spawned in bundle";
+    public string Description => "Gets prefabs which can be spawned in bundle";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

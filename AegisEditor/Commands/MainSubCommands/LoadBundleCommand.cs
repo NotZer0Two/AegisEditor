@@ -2,19 +2,19 @@ using System;
 using AegisEditor.API.Features;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class LoadBundleCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "loadbundle";
+    public string Command => "loadbundle";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "lb" };
+    public string[] Aliases { get; } = ["ldb", "loadb"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Load bundles";
+    public string Description => "Load bundles";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

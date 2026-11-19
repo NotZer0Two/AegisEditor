@@ -3,19 +3,19 @@ using System.Linq;
 using AegisEditor.API.Features;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class RemoveAllCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "removeall";
+    public string Command => "removeall";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "ra" };
+    public string[] Aliases { get; } = ["ra"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Removes all spawned prefabs";
+    public string Description => "Removes all spawned prefabs";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

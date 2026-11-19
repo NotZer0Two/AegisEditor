@@ -81,13 +81,13 @@ public class ParentTestCommand : ICommand
     private static int _moveFrame;
 
     /// <inheritdoc />
-    public string Command { get; } = "parenttest";
+    public string Command => "parenttest";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "pt" };
+    public string[] Aliases { get; } = ["pt"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Spawns the same hierarchy with AegisEditor and with real game toys and checks they match (DEBUG ONLY)";
+    public string Description => "Spawns the same hierarchy with AegisEditor and with real game toys and checks they match (DEBUG ONLY)";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

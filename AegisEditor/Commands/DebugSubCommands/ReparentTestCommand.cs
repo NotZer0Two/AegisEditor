@@ -16,13 +16,13 @@ public class ReparentTestCommand : ICommand
     private const int ChangeParentHash = -342419096;
 
     /// <inheritdoc />
-    public string Command { get; } = "reparenttest";
+    public string Command => "reparenttest";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "rpt" };
+    public string[] Aliases { get; } = ["rpt"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Parents a client object to a net id on your client only (DEBUG ONLY)";
+    public string Description => "Parents a client object to a net id on your client only (DEBUG ONLY)";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

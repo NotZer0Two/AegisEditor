@@ -11,13 +11,13 @@ namespace AegisEditor.Commands.DebugSubCommands;
 public class ColliderBundleCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "colliderbundle";
+    public string Command => "colliderbundle";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "collider", "cb" };
+    public string[] Aliases { get; } = ["collider", "cb"];
 
     /// <inheritdoc />
-    public string Description { get; } = "colliders";
+    public string Description => "colliders";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

@@ -3,19 +3,19 @@ using System.Text;
 using AegisEditor.API.Features;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class SpawnedPrefabsCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "spawnedprefabs";
+    public string Command => "spawnedprefabs";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "spawned" };
+    public string[] Aliases { get; } = ["spawned"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Lists spawned prefabs in a bundle";
+    public string Description => "Lists spawned prefabs in a bundle";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

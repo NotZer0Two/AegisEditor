@@ -2,19 +2,19 @@ using System;
 using System.Text;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class ListBundlesCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "listbundles";
+    public string Command => "listbundles";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = ["listb"];
+    public string[] Aliases { get; } = ["listb", "lsb"];
 
     /// <inheritdoc />
-    public string Description { get; } = "List bundles";
+    public string Description => "List bundles";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

@@ -21,13 +21,13 @@ public class SpawnTestCommand : ICommand
     private static readonly List<(GameObject Object, NetworkedObject Networked, Player Player)> Spawned = new();
 
     /// <inheritdoc />
-    public string Command { get; } = "spawntest";
+    public string Command => "spawntest";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "st" };
+    public string[] Aliases { get; } = ["st"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Spawns test spawnables for you only (DEBUG ONLY)";
+    public string Description => "Spawns test spawnables for you only (DEBUG ONLY)";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

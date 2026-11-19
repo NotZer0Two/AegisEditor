@@ -15,13 +15,13 @@ namespace AegisEditor.Commands.DebugSubCommands;
 public class HierarchyCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "hierarchy";
+    public string Command => "hierarchy";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "tree" };
+    public string[] Aliases { get; } = ["tree"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Shows the hierarchy of a spawned prefab and how it is parented on the client";
+    public string Description => "Shows the hierarchy of a spawned prefab and how it is parented on the client";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

@@ -2,19 +2,19 @@ using System;
 using AegisEditor.API.Features;
 using CommandSystem;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class RemovePrefabCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "removeprefab";
+    public string Command => "removeprefab";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "remove", "rp" };
+    public string[] Aliases { get; } = ["remove", "rp"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Removes a spawned prefab";
+    public string Description => "Removes a spawned prefab";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)

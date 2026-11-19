@@ -8,19 +8,19 @@ using NorthwoodLib.Pools;
 using RemoteAdmin;
 using UnityEngine;
 
-namespace AegisEditor.Commands.SubCommands;
+namespace AegisEditor.Commands.MainSubCommands;
 
 /// <inheritdoc />
 public class SpawnPrefabCommand : ICommand
 {
     /// <inheritdoc />
-    public string Command { get; } = "spawnprefab";
+    public string Command => "spawnprefab";
 
     /// <inheritdoc />
-    public string[] Aliases { get; } = new string[] { "sp" };
+    public string[] Aliases { get; } = ["sp"];
 
     /// <inheritdoc />
-    public string Description { get; } = "Spawns a prefab at your position";
+    public string Description => "Spawns a prefab at your position";
 
     /// <inheritdoc />
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
@@ -41,7 +41,9 @@ public class SpawnPrefabCommand : ICommand
 
         if (!AegisAPI.TryLoadBundle(bundleName, out BundleInfo bundle))
         {
-            response = $"Bundle \"{bundleName}\" does not exist or is invalid";
+            string[] bundleNames = AegisAPI.GetAvailableBundles();
+            
+            response = $"Bundle \"{bundleName}\" does not exist or is invalid.\nAvailable Bundles:\n{string.Join("\n", bundleNames.Select(n => $" - \"{n}\" - Status {(AegisAPI.IsBundleLoaded(n) ? "✓" : "(X)")}"))}";
             return false;
         }
 
@@ -52,7 +54,7 @@ public class SpawnPrefabCommand : ICommand
 
         if (!bundle.Base.Contains(prefabName))
         {
-            response = $"Prefab \"{prefabName}\" does not exist in bundle \"{bundleName}\"";
+            response = $"Prefab \"{prefabName}\" does not exist in bundle \"{bundleName}\".\nAvailable Prefabs:\n{string.Join("\n", bundle.Prefabs.Select(n => $" - \"{n}\""))}";
             return false;
         }
 
