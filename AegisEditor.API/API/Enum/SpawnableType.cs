@@ -25,4 +25,5 @@ public enum SpawnableType : byte
     Hazard,
     Ragdoll,
     Spawnpoint,
+    Generator,
 }
