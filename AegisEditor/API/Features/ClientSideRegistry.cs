@@ -54,6 +54,7 @@ public static class ClientSideRegistry
         [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
         [typeof(AegisHazard)] = s => new ServerHazardSpawner(((AegisHazard)s)),
         [typeof(AegisRagdollSpawner)] = s => new ServerRagdollSpawner(((AegisRagdollSpawner)s)),
+        [typeof(AegisGenerator)] = s => new ServerGeneratorSpawner(((AegisGenerator)s))
     };
     
     private static readonly HashSet<Type> ClientSided =
