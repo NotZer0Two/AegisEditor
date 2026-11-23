@@ -6,6 +6,7 @@ using System.Reflection;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Extensions;
 using AegisEditor.API.Features;
+using AegisEditor.API.Features.Components;
 using AegisEditor.API.Features.Spawnable;
 using AegisEditor.API.Features.ToolGun;
 using AegisEditor.API.Features.ToolGun.Events;
@@ -270,6 +271,10 @@ public class AegisPlugin : Plugin<AegisConfig>
         AegisServerCalls.GetRole = obj =>
             ReferenceHub.TryGetHub(obj, out ReferenceHub hub) ? (SelectableRoles)hub.GetRoleId() : (SelectableRoles)RoleTypeId.None;
 
+        AegisServerCalls.RegisterDestruction += DestructableComponent.Attach;
+        AegisServerCalls.RegisterDestruction += DestructableComponent.Attach;
+        AegisServerCalls.DamageHealthObject += DestructableComponent.Hurt;
+        AegisServerCalls.HealHealthObject += DestructableComponent.Restore;
 
         AegisServerCalls.Teleport = (target, origin, dest, lagCompensation) =>
         {

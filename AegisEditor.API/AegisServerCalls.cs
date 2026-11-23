@@ -1,5 +1,6 @@
 using System;
 using AegisEditor.API.Enum;
+using AegisEditor.API.Features.Editor;
 using AegisEditor.API.Features.Spawnable;
 using UnityEngine;
 
@@ -29,4 +30,19 @@ public class AegisServerCalls
     /// Teleports an object (target, origin, destination, lag compensation) seamlessly, keeping its momentum.
     /// </summary>
     public static Action<GameObject, GameObject, GameObject, bool> Teleport;
+    
+    /// <summary>
+    /// Invoked when health is spawned.
+    /// </summary>
+    public static Action<GameObject, AegisHealthObject> RegisterDestruction;
+    
+    /// <summary>
+    /// Damages a health object.
+    /// </summary>
+    public static Action<AegisHealthObject, float, GameObject> DamageHealthObject;
+
+    /// <summary>
+    /// Heals a health object.
+    /// </summary>
+    public static Action<AegisHealthObject, float> HealHealthObject;
 }
