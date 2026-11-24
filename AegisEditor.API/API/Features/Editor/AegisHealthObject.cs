@@ -7,7 +7,7 @@ namespace AegisEditor.API.Features.Editor;
 
 public class AegisHealthObject : MonoBehaviour
 {
-    public void Awake()
+    public void Start()
     {
         AegisServerCalls.RegisterDestruction.Invoke(gameObject, this);
     }

@@ -1,11 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using AegisEditor.API.Enum;
 using AegisEditor.API.Features.Editor;
 using InventorySystem.Items.Firearms.Modules;
+using InventorySystem.Items.ThrowableProjectiles;
 using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
 using UnityEngine;
+using Logger = LabApi.Features.Console.Logger;
 
 namespace AegisEditor.API.Features.Components;
 
@@ -34,8 +38,14 @@ public class DestructableComponent : MonoBehaviour, IDestructible
 
     /// <inheritdoc />
     public Vector3 CenterOfMass => Vector3.zero;
+    
+    private static readonly HashSet<DestructableComponent> Roots = new();
 
-    /// <inheritdoc />
+    private void OnDestroy() => Roots.Remove(this);
+    
+    private int _lastFrame = -1;
+    private DamageHandlerBase _lastHandler;
+
     public bool Damage(float damage, DamageHandlerBase handler, Vector3 exactHitPos)
     {
         if (_owner != this)
@@ -43,6 +53,12 @@ public class DestructableComponent : MonoBehaviour, IDestructible
 
         if (_dead || _source == null)
             return false;
+
+        if (_lastFrame == Time.frameCount && _lastHandler == handler)
+            return false;
+
+        _lastFrame = Time.frameCount;
+        _lastHandler = handler;
 
         ReferenceHub hub = null;
 
@@ -57,7 +73,7 @@ public class DestructableComponent : MonoBehaviour, IDestructible
 
         damage *= 1f - _source.ArmorEfficient / 100f;
 
-        if (hub != null && _source.ShowHitmarker)
+        if (hub != null && _source.ShowHitmarker && handler is not FirearmDamageHandler)
             Hitmarker.SendHitmarkerDirectly(hub, damage / 10f);
 
         Apply(damage, hub != null ? hub.gameObject : null);
@@ -104,6 +120,7 @@ public class DestructableComponent : MonoBehaviour, IDestructible
         root._owner = root;
         root._source = source;
         root._health = source.Health;
+        Roots.Add(root);
 
         foreach (Collider collider in target.GetComponentsInChildren<Collider>())
         {
@@ -140,5 +157,42 @@ public class DestructableComponent : MonoBehaviour, IDestructible
             return ExplosionItems.TryGetValue(explosion.ExplosionType, out ItemType item) ? item : ItemType.None;
 
         return hub.inventory.CurItem.TypeId;
+    }
+    
+    /// <summary>
+    /// Applies grenade damage to every health object in range.
+    /// </summary>
+    /// <param name="grenade">The exploding grenade.</param>
+    /// <param name="position">The explosion position.</param>
+    /// <param name="thrower">The player who threw it.</param>
+    public static void Explode(ExplosionGrenade grenade, Vector3 position, ReferenceHub thrower)
+    {
+        AnimationCurve curve = grenade._playerDamageOverDistance;
+        float range = curve.keys[curve.length - 1].time;
+
+        foreach (DestructableComponent root in Roots.ToArray())
+        {
+            if (root._dead || root._source == null)
+                continue;
+
+            float distance = Vector3.Distance(root.transform.position, position);
+            if (distance > range)
+                continue;
+
+            float damage = curve.Evaluate(distance);
+
+            if (thrower != null)
+                damage *= root._source.GetMultiplier((SelectableRoles)thrower.GetRoleId(), SpawnableItemType.GrenadeHE);
+
+            if (damage <= 0f)
+                continue;
+
+            damage *= 1f - root._source.ArmorEfficient / 100f;
+
+            if (thrower != null && root._source.ShowHitmarker)
+                Hitmarker.SendHitmarkerDirectly(thrower, damage / 10f);
+
+            root.Apply(damage, thrower != null ? thrower.gameObject : null);
+        }
     }
 }

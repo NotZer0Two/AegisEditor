@@ -15,6 +15,7 @@ using AegisEditor.API.Struct;
 using AegisEditor.Updaters;
 using HarmonyLib;
 using Interactables.Interobjects;
+using InventorySystem.Items.ThrowableProjectiles;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.CustomHandlers;
@@ -118,6 +119,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         
         ServerEvents.WaitingForPlayers += AegisAPI.ServerSpawner.Initialize;
         PlayerEvents.Spawning += PlayerEventsOnSpawning;
+        ServerEvents.ProjectileExploding += OnProjectileExploding;
         
         _updaterObject = new GameObject("AegisUpdater");
         UnityEngine.Object.DontDestroyOnLoad(_updaterObject);
@@ -156,6 +158,7 @@ public class AegisPlugin : Plugin<AegisConfig>
         ServerEvents.WaitingForPlayers -= AegisAPI.ServerSpawner.Initialize;
         ServerEvents.MapGenerated -= OnMapGenerated;
         ServerEvents.RoundRestarted -= DespawnAutoSpawnedPrefabs;
+        ServerEvents.ProjectileExploding -= OnProjectileExploding;
         DespawnAutoSpawnedPrefabs();
 
         CustomHandlersManager.UnregisterEventsHandler(_toolGunEvents);
@@ -272,7 +275,6 @@ public class AegisPlugin : Plugin<AegisConfig>
             ReferenceHub.TryGetHub(obj, out ReferenceHub hub) ? (SelectableRoles)hub.GetRoleId() : (SelectableRoles)RoleTypeId.None;
 
         AegisServerCalls.RegisterDestruction += DestructableComponent.Attach;
-        AegisServerCalls.RegisterDestruction += DestructableComponent.Attach;
         AegisServerCalls.DamageHealthObject += DestructableComponent.Hurt;
         AegisServerCalls.HealHealthObject += DestructableComponent.Restore;
 
@@ -340,5 +342,13 @@ public class AegisPlugin : Plugin<AegisConfig>
                 rb.angularVelocity = deltaRotation * rb.angularVelocity;
             }
         };
+    }
+    
+    private static void OnProjectileExploding(ProjectileExplodingEventArgs ev)
+    {
+        if (!ev.IsAllowed || ev.TimedGrenade.Base is not ExplosionGrenade grenade)
+            return;
+
+        DestructableComponent.Explode(grenade, ev.Position, ev.Player?.ReferenceHub);
     }
 }

@@ -38,7 +38,8 @@ public class Editor
         typeof(AegisSpawningLocation),
         typeof(AegisTrigger),
         typeof(AegisTriggerTeleport),
-        typeof(Rigidbody)
+        typeof(Rigidbody),
+        typeof(AegisHealthObject),
     };
 
     /// <summary>
