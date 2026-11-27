@@ -59,6 +59,14 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
     [HideInInspector]
     public Collider ObjectCollider;
 
+    /// <summary>
+    /// Converts a color to what the client expects, HDR values are multiplied because the game clamps them.
+    /// </summary>
+    public static Color ToNetworkColor(Color color) =>
+        color.r <= 1 && color.g <= 1 && color.b <= 1
+            ? color
+            : new Color(color.r * 255f, color.g * 255f, color.b * 255f, color.a);
+
     /// <inheritdoc />
     public override void OnStart()
     {
@@ -128,10 +136,7 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
 
         if (Color != _lastColor)
         {
-            if (Color.r <= 1 && Color.g <= 1 && Color.b <= 1)
-                value.Add((PropertyUpdate.PrimitiveColor, Color));
-            else
-                value.Add((PropertyUpdate.PrimitiveColor, new Color(Color.r * 255f, Color.g * 255f, Color.b * 255f, Color.a)));
+            value.Add((PropertyUpdate.PrimitiveColor, ToNetworkColor(Color)));
             _lastColor = Color;
             changed = true;
         }
@@ -194,14 +199,14 @@ public class AegisPrimitive : AegisSpawnable, ICollidable, INetworked, IPreCheck
         ObjectCollider.hideFlags = HideFlags.HideInInspector;
     }
 
-/// <inheritdoc />
-protected override void OnDestroy()
-{
-    base.OnDestroy();
+    /// <inheritdoc />
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
 
-    if (!IsParentOnly)
-        MaterialCache.StopUsingColor(this);
-}
+        if (!IsParentOnly)
+            MaterialCache.StopUsingColor(this);
+    }
 
     /// <inheritdoc />
     public bool SpawnCollider(List<Collider> colliders)

@@ -53,7 +53,7 @@ public abstract class ClientSideObject : NetworkedObject
             writer.WriteVector3(position);
             writer.WriteQuaternion(rotation);
             writer.WriteVector3(scale);
-            writer.WriteByte(30);
+            writer.WriteByte(source.movementSmoothing);
             writer.WriteBool(isStatic);   
         }
 

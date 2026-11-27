@@ -26,4 +26,6 @@ public enum SpawnableType : byte
     Ragdoll,
     Spawnpoint,
     Generator,
+    
+    Particles,
 }

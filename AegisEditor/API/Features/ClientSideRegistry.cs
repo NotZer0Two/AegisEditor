@@ -56,7 +56,9 @@ public static class ClientSideRegistry
         [typeof(AegisInteractable)] = s => new ServerInteractable((AegisInteractable)s),
         [typeof(AegisHazard)] = s => new ServerHazardSpawner(((AegisHazard)s)),
         [typeof(AegisRagdollSpawner)] = s => new ServerRagdollSpawner(((AegisRagdollSpawner)s)),
-        [typeof(AegisGenerator)] = s => new ServerGeneratorSpawner(((AegisGenerator)s))
+        [typeof(AegisGenerator)] = s => new ServerGeneratorSpawner(((AegisGenerator)s)),
+
+        [typeof(AegisParticleEmitter)] = s => ((AegisParticleEmitter)s).IsValid ? new ClientSideParticles((AegisParticleEmitter)s) : null
     };
     
     private static readonly HashSet<Type> ClientSided =
@@ -184,6 +186,9 @@ public static class ClientSideRegistry
                 continue;
 
             NetworkedObject obj = factory(spawnable);
+
+            if (obj == null)
+                continue;
 
             if (spawnable is INetworked networked)
                 networked.NetID = obj.NetId;
@@ -389,6 +394,9 @@ public static class ClientSideRegistry
             return null;
 
         NetworkedObject obj = factory(spawnable);
+
+        if (obj == null)
+            return null;
 
         if (spawnable is INetworked networked)
             networked.NetID = obj.NetId;

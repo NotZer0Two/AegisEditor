@@ -24,10 +24,7 @@ public class ClientSidePrimitive(AegisPrimitive source) : ClientSideObject(sourc
             (source.IsCollidable ? PrimitiveFlags.Collidable : PrimitiveFlags.None);
         
         writer.Write((int)source.PrimitiveType.ToPrimitiveType());
-        if (source.Color.r <= 1 && source.Color.g <= 1 && source.Color.b <= 1)
-            writer.Write(source.Color);
-        else
-            writer.Write(new Color(source.Color.r * 255f, source.Color.g * 255f, source.Color.b * 255f, source.Color.a));
+        writer.Write(AegisPrimitive.ToNetworkColor(source.Color));
         writer.Write((byte)(primitiveFlags));
     }
 }

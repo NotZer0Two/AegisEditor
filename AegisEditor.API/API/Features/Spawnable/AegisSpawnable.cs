@@ -14,6 +14,11 @@ namespace AegisEditor.API.Features.Spawnable;
 public class AegisSpawnable : MonoBehaviour, ISpawnable
 {
     [HideInInspector] public Transform toUpdate;
+
+    /// <summary>
+    /// MovementSmoothing the client uses to interpolate this object, 0 disables it.
+    /// </summary>
+    public byte movementSmoothing = 30;
     
     internal int UpdaterIndex = -1;
     
