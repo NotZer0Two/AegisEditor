@@ -17,7 +17,9 @@ public class AegisSpawnable : MonoBehaviour, ISpawnable
 
     /// <summary>
     /// MovementSmoothing the client uses to interpolate this object, 0 disables it.
+    /// <remarks>NOT SYNCED</remarks>
     /// </summary>
+    [HideInInspector]
     public byte movementSmoothing = 30;
     
     internal int UpdaterIndex = -1;
